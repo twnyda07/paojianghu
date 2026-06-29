@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>跑江湖 · 禪師星球大冒險</title>
+<style>
+  :root{
+    --ink:#4a3b6b; --ink2:#6b5a8c; --paper:#fffdf8;
+    --shadow:rgba(120,90,170,.22);
+    --gold:#f5a623; --gold2:#f7c948;
+    font-size:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC","Segoe UI",sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,#bfe9ff 0%,#d9e6ff 22%,#f0e0ff 45%,#ffe6f3 68%,#fff3d9 100%);
+    background-attachment:fixed;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- background decoration ---------- */
+  #sky{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
+  .sun{position:absolute; top:-90px; right:-70px; width:340px; height:340px; border-radius:50%;
+    background:radial-gradient(circle at 50% 50%, rgba(255,240,180,.95), rgba(255,224,150,.5) 45%, rgba(255,224,150,0) 70%);
+    animation:breathe 8s ease-in-out infinite;}
+  .cloud{position:absolute; background:rgba(255,255,255,.7); border-radius:50px; filter:blur(2px);
+    box-shadow:0 8px 30px rgba(150,170,220,.25);}
+  .planet{position:absolute; border-radius:50%; opacity:.5; filter:blur(.3px);}
+  .spark{position:absolute; width:6px; height:6px; border-radius:50%; background:#fff;
+    box-shadow:0 0 8px 2px rgba(255,255,255,.9); animation:twinkle 3s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:.2; transform:scale(.7);}50%{opacity:1; transform:scale(1.3);}}
+  @keyframes breathe{0%,100%{transform:scale(1); opacity:.9;}50%{transform:scale(1.08); opacity:1;}}
+  @keyframes drift{from{transform:translateX(-10px);}to{transform:translateX(40px);}}
+
+  /* ---------- header ---------- */
+  header{position:sticky; top:0; z-index:30; text-align:center; padding:14px 12px 10px;
+    background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(255,255,255,.35) 70%,rgba(255,255,255,0));
+    backdrop-filter:blur(6px);}
+  h1{margin:0; font-size:clamp(2rem,7vw,3.1rem); letter-spacing:.18em; font-weight:900;
+    background:linear-gradient(120deg,#ff8fb4,#ffb24d,#7bd3ff,#b48cff);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    text-shadow:0 3px 10px rgba(255,255,255,.6); filter:drop-shadow(0 2px 2px rgba(180,140,220,.25));}
+  .subtitle{margin:.2em 0 .6em; font-size:clamp(.85rem,3.2vw,1.05rem); color:var(--ink2); letter-spacing:.18em;}
+  .subtitle b{color:#e76fa1;}
+  /* progress */
+  #progwrap{display:inline-flex; align-items:center; gap:10px; background:#fff; padding:7px 16px;
+    border-radius:999px; box-shadow:0 6px 18px var(--shadow); font-weight:800; color:var(--ink);}
+  #progbar{width:clamp(120px,40vw,240px); height:12px; background:#efe6ff; border-radius:999px; overflow:hidden;}
+  #progfill{height:100%; width:0%; border-radius:999px;
+    background:linear-gradient(90deg,#ffd86b,#ff9ec4,#9be8ff); transition:width .6s cubic-bezier(.2,.9,.3,1.2);}
+  #progtxt{white-space:nowrap; font-size:.95rem;}
+  .star-ic{color:var(--gold); filter:drop-shadow(0 2px 2px rgba(245,166,35,.4));}
+
+  /* ---------- journey ---------- */
+  #journey{position:relative; z-index:10; max-width:760px; margin:8px auto 40px; padding:10px 0 0;}
+  #pathsvg{position:absolute; inset:0; width:100%; height:100%; z-index:1; pointer-events:none;}
+  .pth{fill:none; stroke:#ffffff; stroke-width:9; stroke-linecap:round; opacity:.75;}
+  .pth-dash{fill:none; stroke:#c9a8ff; stroke-width:4; stroke-linecap:round; stroke-dasharray:2 16;
+    opacity:.9; animation:flow 14s linear infinite;}
+  @keyframes flow{to{stroke-dashoffset:-360;}}
+
+  .stop{position:relative; z-index:2; min-height:170px; display:flex; align-items:center; padding:6px 4%;}
+  .stop.left{justify-content:flex-start;}
+  .stop.right{justify-content:flex-end;}
+
+  .island{position:relative; width:clamp(150px,42vw,210px); cursor:pointer; text-align:center;
+    transition:transform .25s cubic-bezier(.2,.9,.3,1.4);}
+  .island:hover{transform:translateY(-6px) scale(1.04);}
+  .island:active{transform:scale(.97);}
+  .float{animation:bob var(--fd,4s) ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+
+  /* the floating land + pagoda */
+  .land{position:relative; width:100%; padding-top:8px;}
+  .disc{position:relative; margin:0 auto; width:84%; height:46px; border-radius:50%;
+    background:radial-gradient(ellipse at 50% 30%, var(--c1), var(--c2));
+    box-shadow:0 16px 26px -8px var(--shadow); }
+  .disc::after{content:""; position:absolute; left:8%; top:-10px; width:84%; height:30px; border-radius:50%;
+    background:radial-gradient(ellipse at 50% 40%, rgba(255,255,255,.55), rgba(255,255,255,0) 70%);}
+  .badge{position:absolute; left:50%; top:-6px; transform:translateX(-50%); z-index:4;
+    width:64px; height:64px; border-radius:50%; background:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:34px;
+    box-shadow:0 8px 16px var(--shadow), inset 0 0 0 4px rgba(255,255,255,.9);
+    border:3px solid var(--c1);}
+  .num{position:absolute; left:50%; transform:translateX(-50%); top:-22px; z-index:5;
+    background:var(--c2); color:#fff; font-weight:900; font-size:.8rem; min-width:24px; height:24px;
+    border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 6px;
+    box-shadow:0 3px 6px var(--shadow); border:2px solid #fff;}
+  .crown{position:absolute; right:8px; top:-12px; font-size:22px; z-index:6; filter:drop-shadow(0 2px 2px rgba(0,0,0,.15));}
+
+  .nm{margin-top:14px; font-weight:900; font-size:clamp(1rem,3.6vw,1.15rem); color:var(--ink);
+    text-shadow:0 1px 0 #fff;}
+  .loc{font-size:.78rem; color:var(--ink2); margin-top:2px; letter-spacing:.05em;}
+  .loc::before{content:"📍 ";}
+  .house-tag{display:inline-block; margin-top:5px; font-size:.7rem; font-weight:800; color:#fff;
+    background:var(--c2); padding:2px 9px; border-radius:999px; box-shadow:0 2px 5px var(--shadow);}
+
+  /* completed island */
+  .island.done .badge{box-shadow:0 0 0 4px var(--gold2), 0 10px 20px var(--shadow);}
+  .done-star{position:absolute; left:50%; top:-30px; transform:translateX(-50%); font-size:26px; z-index:7;
+    animation:pop .5s ease; filter:drop-shadow(0 2px 4px rgba(245,166,35,.6));}
+  .bloom{position:absolute; font-size:18px; animation:bobS 3s ease-in-out infinite; pointer-events:none; z-index:6;}
+  @keyframes pop{0%{transform:translateX(-50%) scale(0) rotate(-40deg);}70%{transform:translateX(-50%) scale(1.3);}100%{transform:translateX(-50%) scale(1);}}
+  @keyframes bobS{0%,100%{transform:translateY(0) rotate(-6deg);}50%{transform:translateY(-6px) rotate(6deg);}}
+
+  /* region label */
+  .region{position:relative; z-index:3; text-align:center; margin:6px auto 0; }
+  .region span{display:inline-block; background:rgba(255,255,255,.7); color:#b06fae; font-weight:800;
+    font-size:.8rem; letter-spacing:.2em; padding:3px 14px; border-radius:999px; box-shadow:0 3px 8px var(--shadow);}
+
+  /* ---------- modal ---------- */
+  #overlay{position:fixed; inset:0; z-index:100; background:rgba(90,70,130,.45); backdrop-filter:blur(4px);
+    display:none; align-items:center; justify-content:center; padding:16px;}
+  #overlay.show{display:flex; animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  #card{background:var(--paper); width:min(560px,94vw); max-height:90vh; overflow-y:auto; border-radius:26px;
+    box-shadow:0 24px 60px rgba(80,50,140,.35); position:relative; animation:rise .35s cubic-bezier(.2,.9,.3,1.3);}
+  @keyframes rise{from{transform:translateY(40px) scale(.95); opacity:0;}to{transform:translateY(0) scale(1); opacity:1;}}
+  .card-top{position:relative; padding:22px 22px 16px; text-align:center; border-radius:26px 26px 0 0;
+    background:linear-gradient(160deg,var(--c1),var(--c2));}
+  .card-top .cbadge{width:84px; height:84px; border-radius:50%; background:#fff; margin:0 auto 6px;
+    display:flex; align-items:center; justify-content:center; font-size:46px; box-shadow:0 8px 18px rgba(0,0,0,.18);}
+  .card-top h2{margin:.1em 0 .1em; color:#fff; font-size:1.5rem; text-shadow:0 2px 4px rgba(0,0,0,.18);}
+  .card-top .cnick{color:#fff; opacity:.95; font-size:.92rem; font-weight:700;}
+  .card-top .cmeta{color:#fff; opacity:.92; font-size:.78rem; margin-top:6px;}
+  #closeBtn{position:absolute; right:14px; top:12px; width:36px; height:36px; border:none; border-radius:50%;
+    background:rgba(255,255,255,.85); font-size:20px; cursor:pointer; color:var(--ink); font-weight:900;
+    box-shadow:0 3px 8px rgba(0,0,0,.15);}
+  .card-body{padding:20px 22px 26px;}
+
+  .qlabel{display:inline-block; background:#fff0d6; color:#d98b00; font-weight:900; font-size:.78rem;
+    padding:3px 12px; border-radius:999px; margin-bottom:8px;}
+  .question{font-size:1.18rem; font-weight:800; line-height:1.6; color:var(--ink); margin:0 0 4px;}
+  .ktitle{font-size:.82rem; color:var(--ink2); margin:6px 0 0;}
+
+  .bigbtn{display:block; width:100%; margin-top:18px; border:none; cursor:pointer; font-weight:900;
+    font-size:1.08rem; padding:15px; border-radius:18px; color:#fff; letter-spacing:.05em;
+    background:linear-gradient(120deg,#ff9ec4,#ffb24d); box-shadow:0 8px 18px rgba(245,140,180,.45);
+    transition:transform .15s, box-shadow .15s;}
+  .bigbtn:hover{transform:translateY(-2px); box-shadow:0 12px 24px rgba(245,140,180,.55);}
+  .bigbtn:active{transform:scale(.98);}
+  .bigbtn.blue{background:linear-gradient(120deg,#7bd3ff,#9be8c9); box-shadow:0 8px 18px rgba(110,200,230,.45);}
+
+  .reveal{display:none; margin-top:14px;}
+  .reveal.show{display:block;}
+  .story p{margin:0 0 12px; font-size:1.06rem; line-height:1.8; color:#3f3360;
+    opacity:0; transform:translateY(10px); animation:lineIn .5s forwards;}
+  .fact{margin-top:8px; background:linear-gradient(120deg,#fff7e0,#ffeef6); border-radius:16px; padding:14px 16px;
+    font-size:1rem; line-height:1.7; color:#7a5d2e; border:2px dashed #ffd98a;}
+  .fact b{color:#e08a00;}
+  .src{margin-top:12px; font-size:.78rem;}
+  .src summary{cursor:pointer; color:#a98fd0; font-weight:700;}
+  .src p{margin:8px 0 0; color:#8a7ab0; line-height:1.7; background:#f4efff; padding:10px 12px; border-radius:12px;
+    font-family:"Noto Serif TC",serif;}
+  @keyframes lineIn{to{opacity:1; transform:translateY(0);}}
+
+  /* quiz */
+  .quiz{display:none; margin-top:16px;}
+  .quiz.show{display:block;}
+  .quiz h3{font-size:1.1rem; margin:0 0 12px; color:var(--ink); text-align:center;}
+  .opt{display:block; width:100%; text-align:left; margin:10px 0; padding:14px 16px; border-radius:16px;
+    border:2.5px solid #eadcff; background:#fff; cursor:pointer; font-size:1.05rem; font-weight:700; color:var(--ink);
+    transition:all .15s;}
+  .opt:hover{border-color:#c9a8ff; transform:translateX(4px);}
+  .opt.correct{border-color:#5bcf8e; background:#e9fbef; color:#2f9c5c;}
+  .opt.wrong{border-color:#ff9aa2; background:#fff0f1; color:#e25563; animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
+  .qfeed{margin-top:12px; text-align:center; font-weight:800; font-size:1.05rem; min-height:1.4em;}
+
+  /* confetti + celebration */
+  #confetti{position:fixed; inset:0; z-index:200; pointer-events:none;}
+  #celebrate{position:fixed; inset:0; z-index:150; display:none; align-items:center; justify-content:center; padding:18px;
+    background:rgba(90,70,130,.5); backdrop-filter:blur(6px);}
+  #celebrate.show{display:flex;}
+  .cert{background:linear-gradient(160deg,#fffdf8,#fff0fa); border-radius:28px; padding:30px 26px; text-align:center;
+    width:min(480px,94vw); box-shadow:0 24px 60px rgba(80,50,140,.4); border:4px solid var(--gold2); position:relative;}
+  .cert h2{font-size:1.8rem; margin:.2em 0; color:#e76fa1;}
+  .lotus{font-size:64px; animation:bob 3s ease-in-out infinite;}
+  .cert p{font-size:1.05rem; line-height:1.8; color:var(--ink2);}
+  .cert .five{font-size:1.5rem; letter-spacing:.1em; margin:10px 0;}
+
+  footer{position:relative; z-index:10; text-align:center; padding:10px 16px 30px; color:#9a8bc0; font-size:.78rem;}
+  .reset{background:none; border:1.5px solid #d4c4f0; color:#9a8bc0; border-radius:999px; padding:6px 14px;
+    cursor:pointer; font-size:.78rem; margin-top:6px;}
+  .startline{text-align:center; z-index:10; position:relative; margin:2px auto 0; color:#b06fae; font-weight:800;
+    font-size:.9rem; letter-spacing:.1em;}
+  .startline .big{font-size:1.4rem;}
+</style>
+</head>
+<body>
+
+<div id="sky"></div>
+
+<header>
+  <h1>跑江湖</h1>
+  <div class="subtitle">✦ 禪師星球大冒險 ✦ <b>17位高僧的奇妙故事</b></div>
+  <div id="progwrap">
+    <span class="star-ic">⭐</span>
+    <div id="progbar"><div id="progfill"></div></div>
+    <span id="progtxt">0 / 17</span>
+  </div>
+</header>
+
+<div class="startline"><span class="big">🚩</span><br>從這裡出發，沿著光之路認識每一位禪師！</div>
+
+<main id="journey">
+  <svg id="pathsvg" preserveAspectRatio="none"><path class="pth" id="pthMain"/><path class="pth-dash" id="pthDash"/></svg>
+  <div id="stops"></div>
+</main>
+
+<footer>
+  寶嚴禪寺 · 給小朋友的禪宗公案小遊戲　🪷<br>
+  <span style="font-size:.72rem">故事改編自《禪宗法脈》原典，點選每位禪師可看真正的古文出處</span><br>
+  <button class="reset" id="resetBtn">🔄 重新開始冒險</button>
+</footer>
+
+<div id="overlay"><div id="card"></div></div>
+<div id="celebrate"></div>
+<canvas id="confetti"></canvas>
+
+<script>
+const DATA = [
+  {id:"niaoke",name:"鳥窠道林",nick:"住在樹上的鳥窩和尚",loc:"浙江·杭州 秦望山",region:"江南",house:"",emoji:"🪺",c1:"#bdeeb0",c2:"#5fb85b",
+   title:"鳥窠禪師（住在大樹上）",
+   hook:"有個和尚不住房子，竟然住在大樹上，跟喜鵲當鄰居！為什麼呀？",
+   story:["有位道林和尚，看上了一棵超大的松樹。","這棵樹枝葉茂密、彎彎曲曲，像一把大大的雨傘。","他乾脆就爬上去，住在樹上啦！","大家都叫他『鳥窩和尚』，因為他住得像鳥巢一樣。","更有趣的是，旁邊還有喜鵲來築巢，跟他當鄰居。","小鳥一點都不怕他，因為他心地溫柔又善良。"],
+   fact:"心地善良溫柔的人，連小動物都願意親近他、信任他。",
+   quiz:{q:"鳥窠禪師為什麼叫這個名字？",opts:["他養了很多鳥","他住在大樹上像鳥巢","他長得像一隻鳥"],ans:1,reward:"答對了！他住在樹上跟喜鵲當鄰居，超酷的！"},
+   src:"見秦望山有長松，枝葉繁茂，盤屈如蓋，遂棲止其上，故時人謂之鳥窠禪師；復有鵲巢於其側，自然馴狎，故亦稱鵲巢和尚。"},
+
+  {id:"bodhidharma",name:"菩提達摩",nick:"面壁九年達摩爺爺",loc:"河南·嵩山 少林寺",region:"北方",house:"",emoji:"🧱",c1:"#cdbcf5",c2:"#8e6fe0",
+   title:"面壁九年",
+   hook:"有個和尚對著一面牆壁坐了整整九年，到底在看什麼？",
+   story:["很久很久以前，有位從印度來的達摩爺爺。","他來到中國少林寺，做了一件超怪的事。","他每天面對著一片牆壁坐著，安安靜靜，一句話都不說。","就這樣坐了整整九年！沒有人猜得到他在想什麼。","大家都叫他「看牆壁的婆羅門」。","原來他是在安靜地練習看自己的心呢。"],
+   fact:"安靜下來、不被吵雜打擾，反而更能聽見自己心裡真正的聲音。",
+   quiz:{q:"達摩爺爺對著牆壁靜靜坐了多久？",opts:["九天","九個月","九年"],ans:2,reward:"答對了！整整九年喔，這叫做超級有耐心的『面壁』！"},
+   src:"止嵩山少林寺，面壁坐禪，終日默然，人莫之測，謂之「壁觀婆羅門」。"},
+
+  {id:"farong",name:"牛頭法融",nick:"百鳥送花的懶融",loc:"江蘇·牛頭山 幽棲寺",region:"江南",house:"",emoji:"🐦",c1:"#aedcf2",c2:"#4fa3d9",
+   title:"百鳥啣花（坐到鳥兒來送花）",
+   hook:"有個和尚在山洞裡打坐，連小鳥都飛來叼著花送給他！這是怎麼回事？",
+   story:["法融和尚跑到牛頭山的山洞裡，安安靜靜地打坐修行。","他坐得好專心、心好平靜，整個山林都變得很祥和。","神奇的事發生了——好多好多小鳥，竟然啣著花飛來找他！","小鳥們把花放在他身邊，好像在送禮物給他。","後來道信老師來找他，還故意嚇唬他、又寫了個『佛』字考他。","法融學會了：心不要老是緊抓著什麼，自然就會輕鬆自在。"],
+   fact:"當一個人內心安定平和，身邊的環境和小動物也會感受到那份寧靜。",
+   quiz:{q:"法融和尚在山洞打坐時，發生了什麼神奇的事？",opts:["小鳥啣花來送他","下起了金幣雨","山洞會說話"],ans:0,reward:"答對了！心一平靜，連小鳥都想來作伴呢！"},
+   src:"後入牛頭山幽棲寺北巖之石室，有百鳥啣花之異。"},
+
+  {id:"huineng",name:"六祖慧能",nick:"是心在動慧能",loc:"廣東·廣州 法性寺",region:"嶺南",house:"",emoji:"🚩",c1:"#ffe79a",c2:"#f2b705",
+   title:"風動幡動",
+   hook:"是風在動，還是旗子在動？兩個和尚吵翻天，你猜誰對？",
+   story:["有一天，寺廟裡的旗子被風吹得飄呀飄。","兩個和尚吵了起來：一個說「是風在動！」一個說「不對，是旗子在動！」","他們吵個沒完，誰也不讓誰。","這時慧能走過來，淡淡地說了一句話。","「不是風動，也不是旗子動——是你們的『心』在動啊！」","大家都驚呆了，原來最會動的，是我們自己的心。"],
+   fact:"同一件事，每個人感受不同，因為是我們的『心』在看、在判斷。",
+   quiz:{q:"慧能說，真正在動的是什麼？",opts:["風","旗子","人的心"],ans:2,reward:"答對了！是心在動喔，這句話超有名！"},
+   src:"因二僧論風幡義，一曰風動，一曰幡動，議論不已。師進曰：「不是風動，不是幡動，仁者心動。」"},
+
+  {id:"nanyang-huizhong",name:"南陽慧忠國師",nick:"考倒讀心術大師的國師",loc:"南陽·京城",region:"北方",house:"",emoji:"🔮",c1:"#e9b8e3",c2:"#c25fb8",
+   title:"大耳三藏（讀心術考試）",
+   hook:"有人號稱會讀心術，國師說：那你猜猜我現在在想什麼？結果呢？",
+   story:["有一位叫「大耳三藏」的人，說自己會讀心術，能知道別人在想什麼。","皇帝請國師來考考他。","國師問：「你猜我現在在哪裡？」三藏說：「您跑去看划龍舟啦！」","國師再問一次，三藏說：「您在橋上看人耍猴子！」兩次都猜中了。","國師第三次問，這次把心安靜下來，不亂想——三藏完全猜不到了！","原來心一安靜，讀心術就失靈囉。"],
+   fact:"別人能猜中你，常常是因為你的心一直亂跑。心安靜下來的時候，連讀心術都看不見你在想什麼。",
+   quiz:{q:"大耳三藏為什麼第三次猜不到國師在想什麼？",opts:["國師躲起來了","國師把心安靜下來，不亂想了","三藏太累了"],ans:1,reward:"太厲害了！心一安靜，連讀心術都失靈，是不是很妙？"},
+   src:"三藏纔見師便禮拜……師問曰：「汝道老僧只今在甚麼處？」……藏罔測，師叱曰：「這野狐精，他心通在甚麼處！」藏無對。"},
+
+  {id:"nanyue-huairang",name:"南嶽懷讓",nick:"磨磚變鏡子的怪老師",loc:"湖南·衡嶽",region:"湖湘",house:"",emoji:"🪞",c1:"#a6ead8",c2:"#3fbfa0",
+   title:"磨磚成鏡",
+   hook:"老師居然蹲在地上拚命磨一塊磚頭，說要把它磨成鏡子？這怎麼可能！",
+   story:["有個年輕和尚馬道一，每天拚命打坐，想變成佛。","懷讓老師跑來，拿一塊磚頭在石頭上用力磨呀磨。","馬道一好奇問：「您磨磚做什麼？」老師說：「磨成鏡子啊！」","馬道一笑：「磚頭怎麼可能磨成鏡子？」","老師回他：「磚頭磨不成鏡子，那光是坐著就能變成佛嗎？」","馬道一一聽，整個人都懂了。"],
+   fact:"光做表面功夫不會成功，重要的是用對方法、用心去做。",
+   quiz:{q:"懷讓老師為什麼要在馬道一面前拚命磨一塊磚頭？",opts:["想提醒他：方法不對，再努力也沒用","因為磚頭很髒要洗乾淨","想做一面鏡子來照鏡子"],ans:0,reward:"答對了！用對方法比死命硬幹更重要喔。"},
+   src:"師乃取一磚，於彼庵前石上磨。一曰：「磨作甚麼？」師曰：「磨作鏡。」一曰：「磨磚豈得成鏡邪？」師曰：「磨磚既不成鏡，坐禪豈得作佛？」"},
+
+  {id:"mazu-daoyi",name:"馬祖道一",nick:"一口喝乾整條江的大師",loc:"江西·洪州",region:"江西",house:"",emoji:"🌊",c1:"#a6dcea",c2:"#3fa8c9",
+   title:"一口吸盡西江水",
+   hook:"想知道答案？大師說：「等你一口把整條大江的水喝光，我就告訴你！」",
+   story:["龐居士跑來問馬祖一個很難的問題。","馬祖回他：「等你一口氣把整條西江的水都喝光，我就告訴你答案。」","整條江的水怎麼可能一口喝光呢？","可是龐居士聽完這句，居然當場就懂了！","原來大師是想說：別老想用嘴巴問，有些道理要自己用心去體會。"],
+   fact:"有些問題的答案，不是用問的，是要自己親身去體會的。",
+   quiz:{q:"馬祖叫龐居士做一件不可能的事，是什麼？",opts:["一口喝光整條江的水","一口吃光一座山","一步跳過大海"],ans:0,reward:"答對！這句怪話其實是要他自己去想通呢。"},
+   src:"龐蘊問：「不與萬法為侶者是什麼人？」師云：「待汝一口吸盡西江水，即向汝道。」龐蘊於言下領旨，頓悟玄機。"},
+
+  {id:"shigong-huizang",name:"石鞏慧藏",nick:"放下弓箭當和尚的獵人",loc:"江西",region:"江西",house:"",emoji:"🏹",c1:"#ffc9b0",c2:"#f2784b",
+   title:"石鞏射箭",
+   hook:"一個天天打獵的獵人，被馬祖一句話問到放下弓箭，再也不射動物了！他說了什麼？",
+   story:["石鞏本來是個獵人，最討厭和尚。","有天他追著鹿，跑過馬祖的小屋。馬祖問：「你射箭厲害嗎？」","獵人說：「我一箭射一隻！」馬祖說：「我一箭射一群！」","獵人嚇一跳：「動物都有生命，幹嘛射一整群？」","馬祖反問：「你既然知道，為什麼不射射看自己的壞念頭呢？」","獵人一聽，當場丟下弓箭，跟著馬祖出家了。"],
+   fact:"真正要打敗的不是別人，是自己心裡的壞念頭。",
+   quiz:{q:"馬祖叫獵人射什麼，讓他放下了弓箭？",opts:["射自己心裡的壞念頭","射天上的鳥","射一座山"],ans:0,reward:"答對！戰勝自己，才是最厲害的人！"},
+   src:"曰：「彼此生命，何用射他一群？」師曰：「汝既知如是，何不自射？」……鞏擲下弓箭，投師出家。"},
+
+  {id:"nanquan",name:"南泉普願",nick:"自己種田的草庵爺爺",loc:"安徽·池州 南泉山",region:"江南",house:"",emoji:"🐯",c1:"#ffd9a0",c2:"#f2a03d",
+   title:"南泉逢虎（老虎像什麼）",
+   hook:"三個和尚走山路撞見一隻大老虎，他們居然從老虎身邊走了過去！",
+   story:["杉山、歸宗、南泉三個和尚一起走山路。","走著走著，路上突然出現一隻大老虎！","三個人都好勇敢，一個一個從老虎旁邊平安走了過去。","過去之後，南泉問：「剛剛那隻老虎，看起來像什麼？」","歸宗說：「像一隻小貓。」杉山說：「像一隻小狗。」","南泉說：「我看見的，就是一隻大老虎！」"],
+   fact:"同樣一隻老虎，每個人心裡看到的都不一樣；南泉最特別，他誠實地說『就是老虎』。",
+   quiz:{q:"路上遇到大老虎，南泉說牠看起來像什麼？",opts:["像一隻小貓","像一隻小狗","就是一隻大老虎"],ans:2,reward:"答對了！別人說像貓像狗，南泉最直接，老虎就是老虎，不騙自己。"},
+   src:"路逢一虎，各從虎邊過了。南泉問歸宗云：「適來見虎，似個什麼？」宗云：「似個貓兒。」"},
+
+  {id:"zhaozhou",name:"趙州從諗",nick:"120歲喝茶爺爺",loc:"河北·趙州",region:"北方",house:"",emoji:"🍵",c1:"#a8e2d2",c2:"#3fb89a",
+   title:"喫茶去",
+   hook:"不管你回答什麼，這位120歲的爺爺都只說三個字：『喝茶去』！為什麼？",
+   story:["趙州爺爺問一個新來的和尚：「你以前來過這裡嗎？」","和尚說：「來過。」趙州說：「喝茶去。」","他又問另一個和尚，那人說：「沒來過。」趙州還是說：「喝茶去。」","管事的人很疑惑：「來過、沒來過，您怎麼都叫人家喝茶去呀？」","趙州大喊一聲管事的名字，那人答：「在！」","趙州笑笑說：「喝茶去！」原來，平平常常地過好每一刻，就是最好的修行。"],
+   fact:"不論你是誰、來過沒有，都一樣值得好好喝一杯茶；平常心就是最好的態度。",
+   quiz:{q:"不管和尚怎麼回答，趙州爺爺都叫他們做什麼？",opts:["去掃地","喝茶去","去睡覺"],ans:1,reward:"答對了！『喫茶去』是趙州最有名的話，平平常常過好每一刻最珍貴。"},
+   src:"師問新到：「曾到此間麼？」曰：「曾到」師曰：「喫茶去。」又問僧，僧曰：「不曾到。」師曰：「喫茶去。」……師召院主，主應喏。師曰：「喫茶去。」"},
+
+  {id:"baizhang",name:"百丈懷海",nick:"不工作就不吃飯爺爺",loc:"江西·百丈山",region:"江西",house:"",emoji:"🌾",c1:"#f2dc92",c2:"#d9a93f",
+   title:"一日不作，一日不食",
+   hook:"老和尚都那麼老了，徒弟把他的鋤頭藏起來，結果他做了一件讓大家嚇一跳的事！",
+   story:["百丈和尚年紀很大了，每天還是搶第一個去田裡幹活。","徒弟們很心疼，偷偷把他的鋤頭藏起來，叫他別累了。","找不到鋤頭，老和尚那天竟然一口飯都不吃。","大家急了問為什麼，他說：「我沒做事，怎麼好意思吃飯呢？」","於是他留下一句名言：「一天沒工作，就一天不吃飯。」"],
+   fact:"自己動手做事、不白拿別人的，這是一種很帥的負責任。",
+   quiz:{q:"徒弟把鋤頭藏起來後，百丈老和尚做了什麼？",opts:["生氣大罵","那天不吃飯","去睡覺"],ans:1,reward:"答對了！他用不吃飯告訴大家：做事和吃飯一樣重要！"},
+   src:"師凡作務執勞，必先於眾……既遍求作具不獲，而亦忘餐。故有「一日不作，一日不食」之語流播寰宇矣。"},
+
+  {id:"guishan-lingyou",name:"溈山靈祐",nick:"踢倒水瓶當住持的廚師",loc:"湖南·大溈山",region:"湖湘",house:"溈仰宗",emoji:"🏺",c1:"#c3ea9c",c2:"#7bc043",
+   title:"不得喚作淨瓶（踢淨瓶）",
+   hook:"師父問：「不准叫它水瓶，那它是什麼？」廚師一腳把水瓶踢倒就走人——竟然贏了！",
+   story:["百丈要選一個人去當新寺廟的住持。","他指著地上的水瓶說：「不准叫它水瓶，那你說它是什麼？」","大師兄想了半天，答得普普通通。","輪到當廚師的靈祐，他什麼都沒說，一腳就把水瓶踢倒，轉身走了！","百丈哈哈大笑：「大師兄輸啦！」於是廚師當上了住持。"],
+   fact:"有時候答案不一定要用嘴巴說，用行動也可以表達得很有力。他後來開創了禪宗五大家族之一「溈仰宗」喔！",
+   quiz:{q:"靈祐怎麼回答「這不是水瓶那是什麼」？",opts:["寫了一篇文章","一腳踢倒水瓶走人","說它是花瓶"],ans:1,reward:"答對！一個動作勝過千言萬語，他就這樣當上住持！"},
+   src:"即指淨瓶問曰：「不得喚作淨瓶，汝喚作甚麼？」……丈乃問師，師踢倒淨瓶便出去。丈笑曰：「第一座輸卻山子也。」"},
+
+  {id:"linji-yixuan",name:"臨濟義玄",nick:"大吼一聲的喝功祖師",loc:"鎮州·臨濟院",region:"北方",house:"臨濟宗",emoji:"💥",c1:"#ffb6b6",c2:"#e85d5d",
+   title:"三度問，三度被打",
+   hook:"他問師父問題，竟然三次都被打！後來才發現師父其實是為他好？",
+   story:["義玄是個很認真的年輕和尚，他鼓起勇氣去問師父黃檗一個大問題。","結果話還沒問完，師父就打了他一下。","他不放棄，又去問，又被打；第三次去問，還是被打！","他好難過，以為自己很笨，就跑去找另一位大愚禪師訴苦。","大愚說：「你師父這麼疼你、這麼用心，你怎麼還說自己有錯沒錯呢！」","義玄一聽，忽然全懂了，原來師父的『打』，是最深的關心。"],
+   fact:"大人嚴格有時候是因為很在乎你，換個角度想，就懂了背後的好意。他開創了禪宗五大家族裡最大的「臨濟宗」！",
+   quiz:{q:"義玄去問師父問題，連續三次發生了什麼事？",opts:["都被師父打","都得到糖果","師父都睡著了"],ans:0,reward:"答對了！原來嚴格的師父，是用特別的方式在疼他呢。"},
+   src:"某甲三度問佛法的的大意，三度被打。……師於言下大悟。乃曰：「元來黃檗佛法無多子。」"},
+
+  {id:"deshan-xuanjian",name:"德山宣鑒",nick:"被賣餅婆婆問倒的大學者",loc:"湖南·澧陽",region:"湖湘",house:"",emoji:"🥟",c1:"#ffe0a8",c2:"#e8a23d",
+   title:"婆子點心",
+   hook:"超會背書的大學者，竟然被一個賣餅的婆婆一句話問到說不出話！",
+   story:["德山是個很厲害的學者，把一本佛經背得滾瓜爛熟，到處跟人講。","有一天他肚子餓，向路邊一個賣餅的婆婆買「點心」吃。","婆婆說：「我問你一題，答得出來，餅免費送你；答不出來，請去別家買。」","婆婆問：「經上說過去的心、現在的心、未來的心都抓不住，那你要『點』哪一個心呢？」","德山想了半天，一句話也答不出來！原來書背得再熟，也不一定真的懂。"],
+   fact:"「點心」這個詞在這裡被婆婆玩了文字遊戲喔。會背書不等於真懂，肯動腦、肯謙虛才會真正學會。",
+   quiz:{q:"是誰把超會背書的德山問倒了？",opts:["國王","賣餅的婆婆","他的老師"],ans:1,reward:"答對了！賣餅婆婆一句話就問倒大學者，會背不等於真懂喔！"},
+   src:"婆曰：「金剛經道：過去心不可得，現在心不可得，未來心不可得。未審上座點那個心？」師無語。"},
+
+  {id:"yunmen-wenyan",name:"雲門文偃",nick:"一個字大師",loc:"韶州·雲門山",region:"嶺南",house:"雲門宗",emoji:"☀️",c1:"#ffe08a",c2:"#f2a60c",
+   title:"日日是好日",
+   hook:"全寺的人都答不出師父的問題，師父自己說出五個字，成了千年名言！是哪五個字？",
+   story:["雲門師父問大家一個問題，全寺的人都安靜下來，沒人答得出來。","雲門等了又等，最後自己給出了答案。","他說了五個字：「日日是好日。」","意思是——不管天氣好壞、心情好壞，每一天都是值得好好過的好日子。","這句話太有名了，一千多年後我們還常常用它來鼓勵自己。"],
+   fact:"「日日是好日」是雲門宗開創者雲門文偃的名言。它提醒我們：下雨天也好，晴天也好，每一天都有它的美好。",
+   quiz:{q:"雲門師父最有名的五個字是什麼？",opts:["天天有好運","日日是好日","每天要早起"],ans:1,reward:"答對！記住喔——每一天都是好日子。"},
+   src:"「十五日已前不問汝，十五日已後道將一句來。」眾無對。自代曰：「日日是好日。」"},
+
+  {id:"dongshan-liangjie",name:"洞山良价",nick:"看水裡影子開悟的祖師",loc:"江西·洞山",region:"江西",house:"曹洞宗",emoji:"💧",c1:"#aecbf2",c2:"#5a8fe0",
+   title:"過水睹影",
+   hook:"他低頭過河，看到水裡的影子，突然就什麼都懂了！他看見了什麼？",
+   story:["洞山一直想不通師父留給他的話。","有一天他走路過一條小河。","低頭一看，水面上映出自己的影子。","就在那一瞬間，他突然全懂了！","他說：「影子就是我，可是我不是那個影子。」","後來他成為禪宗『曹洞宗』的開山祖師。"],
+   fact:"水裡的影子很像你，但那只是倒影，真正的你站在岸上，這就是分辨真假的智慧。",
+   quiz:{q:"洞山是看到什麼之後突然開悟的？",opts:["天上的彩虹","水裡自己的影子","一隻大青蛙"],ans:1,reward:"對！看到水中影子，他一下就懂了，還開創了曹洞宗！"},
+   src:"後因過水睹影，大悟前旨，有偈云……「渠今正是我，我今不是渠。」"},
+
+  {id:"fayan-wenyi",name:"清涼法眼文益",nick:"雪地問路爺爺",loc:"金陵·清涼院",region:"江南",house:"法眼宗",emoji:"❄️",c1:"#c4daf2",c2:"#6f9fe0",
+   title:"不知最親切",
+   hook:"學生老實說「我不知道」，師父竟然稱讚：「『不知道』才最棒！」為什麼？",
+   story:["法眼文益年輕時和朋友一起出門遊學，路上遇到大雪，就到一間寺廟躲雪、烤火。","寺裡的桂琛師父問他：「你這趟出門是要去做什麼呀？」","法眼老實回答：「我也不知道耶。」","沒想到師父笑著說：「『不知道』這三個字，才是最真誠、最親切的呀！」","原來敢承認自己「還不懂」，才是最棒的學習開始。","法眼後來就跟著他學，成了法眼宗的開創者。"],
+   fact:"法眼文益是法眼宗的開創者。承認「我不知道」並不丟臉，反而是學習的第一步，因為這樣才會虛心去學新東西。",
+   quiz:{q:"法眼說「我不知道」，桂琛師父怎麼回應？",opts:["罵他笨","稱讚『不知道』最親切","叫他回家"],ans:1,reward:"答對！承認不懂，正是學習的好開始。"},
+   src:"藏曰：「作麼生是行腳事？」師曰：「不知。」藏曰：「不知最親切。」"}
+];
+
+const KEY="pkjh_mv1";
+let done = new Set(JSON.parse(localStorage.getItem(KEY)||"[]"));
+const stopsEl=document.getElementById('stops');
+
+/* ---------- build sky ---------- */
+(function sky(){
+  const s=document.getElementById('sky');
+  s.innerHTML='<div class="sun"></div>';
+  const clouds=[[8,90,'18s'],[60,140,'26s'],[30,80,'22s'],[78,110,'30s'],[15,70,'20s']];
+  clouds.forEach((cl,i)=>{
+    const d=document.createElement('div'); d.className='cloud';
+    const w=cl[1], top=cl[0];
+    d.style.cssText=`width:${w}px;height:${w*.34}px;top:${top}px;left:${(i*22+5)%90}%;animation:drift ${cl[2]} ease-in-out infinite alternate;`;
+    s.appendChild(d);
+  });
+  const pl=[['#ffd1e8',70,'12%','22%'],['#cfe6ff',50,'82%','40%'],['#fff0b8',40,'10%','62%'],['#e3d1ff',60,'88%','72%']];
+  pl.forEach(p=>{const d=document.createElement('div'); d.className='planet';
+    d.style.cssText=`width:${p[1]}px;height:${p[1]}px;left:${p[2]};top:${p[3]};background:radial-gradient(circle at 35% 30%,#fff,${p[0]});`;
+    s.appendChild(d);});
+  for(let i=0;i<46;i++){const d=document.createElement('div'); d.className='spark';
+    d.style.left=Math.round((i*37+13)%100)+'%';
+    d.style.top=Math.round((i*53+7)%100)+'%';
+    d.style.animationDelay=((i%10)*0.3)+'s';
+    d.style.transform='scale('+(0.5+(i%4)*0.25)+')';
+    s.appendChild(d);}
+})();
+
+/* ---------- build journey ---------- */
+let lastRegion="";
+DATA.forEach((m,i)=>{
+  if(m.region && m.region!==lastRegion){
+    const r=document.createElement('div'); r.className='region';
+    r.innerHTML='<span>🗺️ '+m.region+'</span>'; stopsEl.appendChild(r); lastRegion=m.region;
+  }
+  const stop=document.createElement('div');
+  stop.className='stop '+(i%2===0?'left':'right');
+  const fd=(3.4+(i%5)*0.4).toFixed(1)+'s';
+  const isDone=done.has(m.id);
+  const crown=m.house?'<div class="crown">👑</div>':'';
+  const houseTag=m.house?'<div class="house-tag">🌸 '+m.house+'</div>':'';
+  stop.innerHTML=`
+    <div class="island ${isDone?'done':''} float" data-id="${m.id}" style="--c1:${m.c1};--c2:${m.c2};--fd:${fd}">
+      <div class="num">${i+1}</div>
+      <div class="land">
+        <div class="badge">${m.emoji}</div>
+        ${crown}
+        ${isDone?'<div class="done-star">⭐</div>':''}
+        <div class="disc"></div>
+      </div>
+      <div class="nm">${m.name}</div>
+      <div class="loc">${m.loc}</div>
+      ${houseTag}
+    </div>`;
+  stopsEl.appendChild(stop);
+});
+
+document.querySelectorAll('.island').forEach(el=>{
+  el.addEventListener('click',()=>openCard(el.dataset.id));
+});
+
+/* ---------- path drawing ---------- */
+function drawPath(){
+  const svg=document.getElementById('pathsvg');
+  const main=document.getElementById('pthMain');
+  const dash=document.getElementById('pthDash');
+  const j=document.getElementById('journey');
+  const jr=j.getBoundingClientRect();
+  svg.setAttribute('viewBox',`0 0 ${jr.width} ${jr.height}`);
+  const isls=[...document.querySelectorAll('.island')];
+  if(!isls.length) return;
+  const pts=isls.map(el=>{const b=el.querySelector('.badge').getBoundingClientRect();
+    return [b.left-jr.left+b.width/2, b.top-jr.top+b.height/2];});
+  let d=`M ${pts[0][0]} ${pts[0][1]}`;
+  for(let i=1;i<pts.length;i++){
+    const [x0,y0]=pts[i-1],[x1,y1]=pts[i];
+    const my=(y0+y1)/2;
+    d+=` C ${x0} ${my}, ${x1} ${my}, ${x1} ${y1}`;
+  }
+  main.setAttribute('d',d); dash.setAttribute('d',d);
+}
+window.addEventListener('load',()=>{drawPath(); updateProg();});
+window.addEventListener('resize',drawPath);
+setTimeout(drawPath,300);
+
+/* ---------- progress ---------- */
+function updateProg(){
+  const n=done.size, t=DATA.length;
+  document.getElementById('progfill').style.width=(n/t*100)+'%';
+  document.getElementById('progtxt').textContent=n+' / '+t;
+}
+
+/* ---------- card / modal ---------- */
+const overlay=document.getElementById('overlay');
+const card=document.getElementById('card');
+function openCard(id){
+  const m=DATA.find(x=>x.id===id);
+  card.style.setProperty('--c1',m.c1); card.style.setProperty('--c2',m.c2);
+  const houseLine=m.house?`　🌸 ${m.house}（禪宗五大家族之一）`:'';
+  card.innerHTML=`
+    <div class="card-top">
+      <button id="closeBtn">✕</button>
+      <div class="cbadge">${m.emoji}</div>
+      <h2>${m.name}</h2>
+      <div class="cnick">${m.nick}</div>
+      <div class="cmeta">📍 ${m.loc}${houseLine}</div>
+    </div>
+    <div class="card-body">
+      <div class="qlabel">🤔 公案謎題</div>
+      <p class="question">${m.hook}</p>
+      <p class="ktitle">公案名：《${m.title}》</p>
+      <button class="bigbtn" id="revealBtn">🔍 翻開答案，看看故事</button>
+
+      <div class="reveal" id="reveal">
+        <div class="story" id="story"></div>
+        <div class="fact">💡 <b>小知識：</b>${m.fact}</div>
+        <details class="src"><summary>📜 原典出處（給大人看）</summary><p>${m.src}</p></details>
+        <button class="bigbtn blue" id="quizBtn" style="margin-top:16px">🎯 挑戰一下，拿星星！</button>
+      </div>
+
+      <div class="quiz" id="quiz">
+        <h3>${m.quiz.q}</h3>
+        <div id="opts"></div>
+        <div class="qfeed" id="qfeed"></div>
+      </div>
+    </div>`;
+  overlay.classList.add('show');
+
+  document.getElementById('closeBtn').onclick=closeCard;
+  document.getElementById('revealBtn').onclick=()=>{
+    const rv=document.getElementById('reveal'); rv.classList.add('show');
+    const st=document.getElementById('story');
+    m.story.forEach((line,i)=>{const p=document.createElement('p');p.textContent=line;p.style.animationDelay=(i*0.12)+'s';st.appendChild(p);});
+    document.getElementById('revealBtn').style.display='none';
+    setTimeout(()=>document.getElementById('reveal').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  };
+  document.getElementById('quizBtn').onclick=()=>{
+    document.getElementById('quiz').classList.add('show');
+    document.getElementById('quizBtn').style.display='none';
+    const ob=document.getElementById('opts');
+    m.quiz.opts.forEach((o,idx)=>{
+      const b=document.createElement('button'); b.className='opt'; b.textContent=String.fromCharCode(65+idx)+'. '+o;
+      b.onclick=()=>answer(m,idx,b);
+      ob.appendChild(b);
+    });
+    setTimeout(()=>document.getElementById('quiz').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  };
+}
+function answer(m,idx,btn){
+  const feed=document.getElementById('qfeed');
+  const allb=[...document.querySelectorAll('.opt')];
+  if(idx===m.quiz.ans){
+    btn.classList.add('correct');
+    allb.forEach(b=>b.disabled=true);
+    feed.style.color='#2f9c5c'; feed.textContent='🎉 '+m.quiz.reward;
+    if(!done.has(m.id)){ done.add(m.id); localStorage.setItem(KEY,JSON.stringify([...done])); }
+    burst();
+    markDone(m.id);
+    updateProg();
+    setTimeout(()=>{ if(done.size===DATA.length) celebrate(); },900);
+  }else{
+    btn.classList.add('wrong');
+    feed.style.color='#e25563'; feed.textContent='再想想看～你一定可以的！💪';
+    setTimeout(()=>{btn.classList.remove('wrong');},500);
+  }
+}
+function markDone(id){
+  const el=document.querySelector('.island[data-id="'+id+'"]');
+  if(el && !el.classList.contains('done')){
+    el.classList.add('done');
+    const land=el.querySelector('.land');
+    if(!land.querySelector('.done-star')){
+      const s=document.createElement('div'); s.className='done-star'; s.textContent='⭐'; land.appendChild(s);
+    }
+    ['🌸','🌼','✨'].forEach((f,i)=>{const b=document.createElement('div');b.className='bloom';b.textContent=f;
+      b.style.left=(15+i*30)+'%'; b.style.top=(-6+i*4)+'px'; b.style.animationDelay=(i*0.3)+'s'; land.appendChild(b);});
+    drawPath();
+  }
+}
+function closeCard(){overlay.classList.remove('show'); drawPath();}
+overlay.addEventListener('click',e=>{if(e.target===overlay)closeCard();});
+
+/* ---------- confetti ---------- */
+const cvs=document.getElementById('confetti'); const ctx=cvs.getContext('2d');
+function fit(){cvs.width=innerWidth;cvs.height=innerHeight;} fit(); addEventListener('resize',fit);
+let parts=[];
+function burst(){
+  const cols=['#ffd86b','#ff9ec4','#9be8ff','#b48cff','#9be8c9','#ffb24d'];
+  for(let i=0;i<90;i++){parts.push({x:innerWidth/2,y:innerHeight*0.4,
+    vx:(Math.random()-.5)*14,vy:Math.random()*-12-4,g:0.4+Math.random()*0.2,
+    s:6+Math.random()*7,c:cols[i%cols.length],r:Math.random()*6,vr:(Math.random()-.5)*0.4,life:90});}
+  if(!raf) loop();
+}
+let raf=null;
+function loop(){
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.r+=p.vr;p.life--;
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.c;
+    ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.6);ctx.restore();});
+  parts=parts.filter(p=>p.life>0 && p.y<cvs.height+40);
+  if(parts.length) raf=requestAnimationFrame(loop); else {raf=null;ctx.clearRect(0,0,cvs.width,cvs.height);}
+}
+
+/* ---------- celebration ---------- */
+function celebrate(){
+  const c=document.getElementById('celebrate');
+  c.innerHTML=`<div class="cert">
+    <div class="lotus">🪷</div>
+    <h2>恭喜成為江湖小俠客！</h2>
+    <p>你認識了全部 <b>17 位</b> 禪宗大師，<br>走完了整條「跑江湖」之路！</p>
+    <div class="five">🌸 一花開五葉 🌸</div>
+    <p style="font-size:.92rem">臨濟宗 · 溈仰宗 · 曹洞宗 · 雲門宗 · 法眼宗<br>這就是禪宗最有名的「五大家族」喔！</p>
+    <button class="bigbtn" id="celClose" style="margin-top:18px">🎈 太棒了！</button>
+  </div>`;
+  c.classList.add('show');
+  document.getElementById('celClose').onclick=()=>c.classList.remove('show');
+  let n=0; const t=setInterval(()=>{burst(); if(++n>4)clearInterval(t);},500);
+}
+
+/* ---------- reset ---------- */
+document.getElementById('resetBtn').onclick=()=>{
+  if(confirm('要重新開始冒險嗎？已收集的星星會清空喔！')){
+    done=new Set(); localStorage.removeItem(KEY);
+    document.querySelectorAll('.island.done').forEach(el=>{
+      el.classList.remove('done');
+      el.querySelectorAll('.done-star,.bloom').forEach(x=>x.remove());
+    });
+    updateProg(); drawPath();
+  }
+};
+</script>
+</body>
+</html>

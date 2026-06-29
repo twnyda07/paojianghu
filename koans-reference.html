@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>跑江湖 — 禪宗公案地圖</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Georgia", "BiauKai", "標楷體", serif;
+    background: #1a1410;
+    color: #e8dcc8;
+    min-height: 100vh;
+  }
+
+  header {
+    text-align: center;
+    padding: 3rem 1rem 2rem;
+    border-bottom: 1px solid #4a3520;
+    background: linear-gradient(180deg, #0d0b08 0%, #1a1410 100%);
+    position: relative;
+  }
+  header::after {
+    content: "●";
+    display: block;
+    color: #8b6914;
+    font-size: 0.5rem;
+    margin-top: 0.5rem;
+    letter-spacing: 1rem;
+  }
+
+  header h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    letter-spacing: 0.5rem;
+    color: #c8a84b;
+    text-shadow: 0 0 40px rgba(200,168,75,0.3);
+    font-weight: normal;
+  }
+  header p {
+    margin-top: 0.6rem;
+    color: #8a7a60;
+    font-size: 0.95rem;
+    letter-spacing: 0.2rem;
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1.2rem 1rem;
+    background: #120f0a;
+    border-bottom: 1px solid #3a2a15;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  nav button {
+    background: transparent;
+    border: 1px solid #4a3520;
+    color: #9a8060;
+    padding: 0.35rem 1rem;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    letter-spacing: 0.1rem;
+    transition: all 0.2s;
+  }
+  nav button:hover, nav button.active {
+    background: #4a3520;
+    color: #c8a84b;
+    border-color: #8b6914;
+  }
+  nav button.active {
+    background: #3a2510;
+    color: #c8a84b;
+  }
+
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .region {
+    margin-bottom: 3rem;
+  }
+  .region-title {
+    font-size: 0.8rem;
+    letter-spacing: 0.3rem;
+    color: #6a5a40;
+    text-transform: uppercase;
+    border-left: 3px solid #4a3520;
+    padding-left: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .locations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .location-card {
+    background: #211a12;
+    border: 1px solid #3a2a15;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .location-card:hover {
+    border-color: #5a4020;
+  }
+
+  .location-header {
+    padding: 1rem 1.2rem 0.8rem;
+    border-bottom: 1px solid #2e2010;
+    display: flex;
+    align-items: baseline;
+    gap: 0.8rem;
+  }
+  .location-name {
+    font-size: 1.05rem;
+    color: #c8a84b;
+    letter-spacing: 0.05rem;
+  }
+  .location-sub {
+    font-size: 0.75rem;
+    color: #5a4a30;
+  }
+  .master-name {
+    font-size: 0.78rem;
+    color: #8a7050;
+    margin-left: auto;
+    letter-spacing: 0.05rem;
+  }
+
+  .koans-list {
+    padding: 0.5rem 0;
+  }
+
+  .koan-item {
+    border-bottom: 1px solid #1e1810;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .koan-item:last-child { border-bottom: none; }
+  .koan-item:hover { background: #2a2015; }
+
+  .koan-title {
+    padding: 0.65rem 1.2rem;
+    font-size: 0.95rem;
+    color: #c0a870;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    letter-spacing: 0.05rem;
+  }
+  .koan-title::before {
+    content: "▸";
+    font-size: 0.6rem;
+    color: #5a4a30;
+    flex-shrink: 0;
+    transition: transform 0.2s, color 0.2s;
+  }
+  .koan-item.open .koan-title::before {
+    transform: rotate(90deg);
+    color: #c8a84b;
+  }
+
+  .koan-body {
+    display: none;
+    padding: 0 1.2rem 1rem 2.1rem;
+  }
+  .koan-item.open .koan-body { display: block; }
+
+  .koan-question {
+    font-size: 0.88rem;
+    color: #a09070;
+    line-height: 1.8;
+    padding: 0.5rem 0.8rem;
+    border-left: 2px solid #3a2a15;
+    margin-bottom: 0.6rem;
+  }
+  .koan-answer {
+    font-size: 0.88rem;
+    color: #d4b87a;
+    line-height: 1.8;
+    padding: 0.5rem 0.8rem;
+    border-left: 2px solid #8b6914;
+    background: #1e1a10;
+    border-radius: 0 2px 2px 0;
+  }
+  .koan-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.1rem;
+    color: #5a4a30;
+    margin-bottom: 0.3rem;
+  }
+
+  .hidden-count {
+    font-size: 0.72rem;
+    color: #4a3a20;
+    padding: 0.3rem 1.2rem 0.5rem;
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: #3a2a15;
+    font-size: 0.78rem;
+    letter-spacing: 0.15rem;
+    border-top: 1px solid #2a1e0e;
+  }
+
+  @media (max-width: 500px) {
+    .locations-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>跑江湖</h1>
+  <p>禪宗公案 · 按祖師與發生地點</p>
+</header>
+
+<nav id="nav">
+  <button class="active" onclick="filterRegion('all', this)">全部</button>
+  <button onclick="filterRegion('北方', this)">北方</button>
+  <button onclick="filterRegion('南方', this)">南方</button>
+  <button onclick="filterRegion('江西', this)">江西</button>
+  <button onclick="filterRegion('湖南湖北', this)">湖南湖北</button>
+  <button onclick="filterRegion('浙江', this)">浙江</button>
+  <button onclick="filterRegion('海外', this)">海外</button>
+</nav>
+
+<main id="main"></main>
+
+<footer>跑江湖 · 禪不在言語，在指月之間</footer>
+
+<script>
+const data = [
+  {
+    region: "北方",
+    locations: [
+      {
+        name: "嵩山少林寺",
+        sub: "河南·嵩縣",
+        master: "菩提達摩",
+        koans: [
+          {
+            title: "廓然無聖",
+            question: "梁武帝問達摩：「如何是聖諦第一義？」\n達摩曰：「廓然無聖。」\n帝曰：「對朕者誰？」\n達摩曰：「不識。」",
+            answer: "此公案揭示「聖諦」本不可言說。「廓然無聖」意謂絕對空性中無聖可立；「不識」非不知，乃超越知識之直指。達摩與梁武帝機緣不契，隨後渡江北上。"
+          },
+          {
+            title: "安心",
+            question: "慧可久立雪中，斷臂求法：「弟子心未安，乞師安心。」\n達摩曰：「將心來，與汝安。」\n慧可曰：「覓心了不可得。」\n達摩曰：「與汝安心竟。」",
+            answer: "「覓心了不可得」即是安心處。心本無形可覓，一旦了悟心本空寂，妄念自消，安心自現。此乃禪宗傳心之始，慧可因此得法。"
+          }
+        ]
+      },
+      {
+        name: "趙州東院",
+        sub: "河北·趙縣",
+        master: "趙州從諗",
+        koans: [
+          {
+            title: "趙州無",
+            question: "僧問趙州：「狗子還有佛性也無？」\n趙州曰：「無。」",
+            answer: "此「無」字非有無之無，乃超越有無的絕對指向。大慧宗杲以此「無」字為話頭，開創看話禪。參此「無」時，不得作有無會，不得作虛無會，須向無字上做工夫。"
+          },
+          {
+            title: "喫茶去",
+            question: "趙州問僧：「曾到此間否？」\n僧曰：「曾到。」趙州曰：「喫茶去。」\n又問一僧：「曾到此間否？」\n僧曰：「不曾到。」趙州曰：「喫茶去。」\n院主問：「為甚麼曾到也喫茶去，不曾到也喫茶去？」\n趙州曰：「院主！」院主應諾。趙州曰：「喫茶去。」",
+            answer: "來者皆「喫茶去」，不論曾到未到，平等接引，不立差別。「喫茶」是最日常的事，卻是禪的全體大用。所謂「平常心是道」，飲茶即道，行住坐臥皆是禪。"
+          },
+          {
+            title: "洗鉢盂",
+            question: "僧問：「學人乍入叢林，乞師指示。」\n趙州曰：「喫粥了也未？」\n僧曰：「喫粥了。」\n趙州曰：「洗鉢盂去。」\n僧忽有省。",
+            answer: "吃完粥就洗碗，是最尋常的事，也是最究竟的禪。自性就在此刻、此事、此心。「洗鉢盂去」即是整個佛法。僧於尋常事中忽然有省，悟無非日用。"
+          },
+          {
+            title: "庭前柏樹子",
+            question: "僧問：「如何是祖師西來意？」\n趙州曰：「庭前柏樹子。」",
+            answer: "「祖師西來意」問的是佛法本旨，趙州以眼前現成之物直指。庭前柏樹子，就在眼前，不假言說，不立玄義。一切現成，本無欠缺。"
+          },
+          {
+            title: "萬法歸一",
+            question: "僧問：「萬法歸一，一歸何處？」\n趙州曰：「我在青州作一領布衫，重七斤。」",
+            answer: "「一歸何處」是哲學問題，趙州以具體的日常記憶打破概念。七斤布衫就在那裡，不需歸何處。禪非玄談，就是當下現成。"
+          }
+        ]
+      },
+      {
+        name: "臨濟院",
+        sub: "河北·正定",
+        master: "臨濟義玄",
+        koans: [
+          {
+            title: "黃檗三棒",
+            question: "臨濟三度問黃檗：「如何是佛法大意？」\n黃檗每次皆打一棒。\n臨濟後參大愚，大愚問其緣由，臨濟說了。\n大愚曰：「黃檗與麼老婆心切，為汝得徹困，更來這裡問有過無過。」\n臨濟於言下大悟，曰：「元來黃檗佛法無多子。」",
+            answer: "三棒打破言語思量，直指心源。臨濟在大愚點撥下，忽悟黃檗棒棒皆是慈悲，都是老婆心切之「佛法無多子」。禪法本無多子，一棒即是全體。"
+          },
+          {
+            title: "殺佛殺祖",
+            question: "臨濟上堂曰：「佛法無用功處，只是平常無事，屙屎送尿，著衣喫飯，困來即臥。\n愚人笑我，智者知焉。\n逢佛殺佛，逢祖殺祖，逢羅漢殺羅漢……方得解脫，不與物拘，透脫自在。」",
+            answer: "「殺佛殺祖」非謗佛，乃令學人勿執著於佛祖等外在形象。凡所執皆是障礙，殺者，去其執著也。無執則自在，自在即佛。"
+          },
+          {
+            title: "無位真人",
+            question: "臨濟上堂曰：「赤肉團上有一無位真人，常從汝等諸人面門出入，未證據者看看。」\n時有僧出問：「如何是無位真人？」\n臨濟下禪床把住曰：「道！道！」\n僧擬議，臨濟托開曰：「無位真人是什麼乾屎橛！」",
+            answer: "「無位真人」即此刻見聞覺知、無法被分類定位的本來自性。它就在每一個當下的見聞覺知中，卻無法被名相捉住。僧一「擬議」，便錯過了；臨濟一托開，更顯其活脫。"
+          }
+        ]
+      },
+      {
+        name: "黃檗山",
+        sub: "江西·宜豐（今屬江西）",
+        master: "黃檗希運",
+        koans: [
+          {
+            title: "即心是佛",
+            question: "問：「如何是佛？」\n師曰：「即心是佛。」",
+            answer: "心即是佛，佛即是心，心外無佛可求。黃檗此語與馬祖「即心即佛」一脈相承，直指本心。但若執「心即佛」為定論，便又落入窠臼。"
+          },
+          {
+            title: "不著佛求",
+            question: "黃檗曰：「學道人若欲得知要訣，但莫受人惑。向裏向外，逢著便殺。逢佛殺佛，逢祖殺祖，逢羅漢殺羅漢，逢父母殺父母，始得解脫，不與物拘，透脫自在。」",
+            answer: "此語強調「不著一物」。佛法修行若處處受制於外境、外相，便無自由可言。「殺」是斬斷執著，並非真殺。達到「不與物拘」方為解脫。"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    region: "南方",
+    locations: [
+      {
+        name: "曹溪寶林寺",
+        sub: "廣東·韶關",
+        master: "六祖惠能",
+        koans: [
+          {
+            title: "本來面目",
+            question: "惠明追六祖，六祖置衣缽於石上曰：「此衣表信，可力爭耶？任汝將去。」\n明舉之，如山不動。\n六祖曰：「不思善，不思惡，正與麼時，那個是明上座本來面目？」\n明當下大悟。",
+            answer: "「不思善，不思惡」即超越二元對立的當下。本來面目非善非惡，在起心動念之前，本自清淨。惠明在此一問中，頓見自性。"
+          },
+          {
+            title: "風幡之辯",
+            question: "風吹幡動，兩僧爭論，一說風動，一說幡動。\n六祖曰：「不是風動，不是幡動，仁者心動。」",
+            answer: "風與幡皆是外緣，能覺知「動」者是心。但六祖所指非日常散亂之心，而是覺照之心、自性之動。一切感知皆從心起，心才是根本。"
+          },
+          {
+            title: "本來無一物",
+            question: "神秀偈：「身是菩提樹，心如明鏡臺，時時勤拂拭，莫使惹塵埃。」\n惠能偈：「菩提本無樹，明鏡亦非臺，本來無一物，何處惹塵埃？」",
+            answer: "神秀從「漸修」入手，強調用功拂拭；惠能從「頓悟」直指，自性本空，無物可惹塵埃。五祖印可惠能偈，傳以衣缽。兩偈各有層次，前者是工夫，後者是見地。"
+          }
+        ]
+      },
+      {
+        name: "雲門山光泰禪院",
+        sub: "廣東·韶關",
+        master: "雲門文偃",
+        koans: [
+          {
+            title: "日日是好日",
+            question: "雲門曰：「十五日已前不問汝，十五日已後道將一句來。」\n自代曰：「日日是好日。」",
+            answer: "超越時間的分別，每一天都是完整的好日子。「日日是好日」並非無視苦難，而是安住於當下的清淨心中，不為過去未來所縛。《碧巖錄》第六則。"
+          },
+          {
+            title: "乾屎橛",
+            question: "僧問：「如何是佛？」\n雲門曰：「乾屎橛。」",
+            answer: "以最污穢之物指佛，打破一切對「佛」的美化投射。佛不在清淨莊嚴處，就在最尋常、最不起眼之處。「乾屎橛」即是直截指出：莫往外求。"
+          },
+          {
+            title: "雲門顧鑒",
+            question: "雲門示眾曰：「顧！」眾無對。\n雲門自曰：「鑒！」",
+            answer: "「顧鑒」即覺照。雲門以一「顧」一「鑒」，指出自性本具覺照能力。禪不在別處，就在這一覺之中。眾人無對，因為此事說不得。"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    region: "江西",
+    locations: [
+      {
+        name: "洪州開元寺",
+        sub: "江西·南昌",
+        master: "馬祖道一",
+        koans: [
+          {
+            title: "磨磚作鏡",
+            question: "馬祖在衡嶽坐禪，師懷讓見而問：「大德坐禪圖什麼？」\n馬祖曰：「圖作佛。」\n懷讓取一磚，於庵前磨。\n馬祖問：「磨磚作什麼？」\n懷讓曰：「磨作鏡。」\n馬祖曰：「磨磚豈得成鏡？」\n懷讓曰：「磨磚既不成鏡，坐禪豈得成佛？」",
+            answer: "坐禪若執著於「成佛」之目的，便如磨磚求鏡，永無成時。佛非坐禪得，坐禪是因緣，佛是自性本有。馬祖由此大悟，成南嶽懷讓之法嗣。"
+          },
+          {
+            title: "即心即佛",
+            question: "大梅問：「如何是佛？」\n馬祖曰：「即心即佛。」\n大梅因此悟道，入山結庵。\n後馬祖遣僧試之，告以師近日又道：「非心非佛。」\n大梅曰：「這老漢惑亂人未有了日！任汝非心非佛，我只管即心即佛。」\n馬祖聞之曰：「梅子熟也。」",
+            answer: "「即心即佛」是悟後之說，「非心非佛」是防執著之方。大梅能於「即心即佛」一語中站穩腳跟，不為「非心非佛」所動，說明已真正得力，不是口頭禪。"
+          },
+          {
+            title: "馬祖一喝",
+            question: "百丈隨侍馬祖，見野鴨飛過。\n馬祖問：「是什麼？」\n百丈曰：「野鴨子。」\n馬祖曰：「甚處去也？」\n百丈曰：「飛過去也。」\n馬祖回身，把百丈鼻子一扭。\n百丈作忍痛聲，馬祖曰：「又道飛過去也。」\n百丈大悟。",
+            answer: "野鴨是否飛過去，在分別心中是已成定局的事；但從本心看，何曾去過？馬祖扭鼻之痛是當下的，百丈因痛而悟：當下即是，哪有去來？"
+          }
+        ]
+      },
+      {
+        name: "百丈山大智壽聖禪寺",
+        sub: "江西·宜春",
+        master: "百丈懷海",
+        koans: [
+          {
+            title: "野狐禪",
+            question: "百丈每上堂，有老人隨眾聽法。一日問：「大修行人還落因果也無？」\n百丈曰：「不昧因果。」\n老人大悟，云：「我昔因一學人問，答『不落因果』，遂墮野狐身五百世。今蒙和尚一言，脫野狐身。」",
+            answer: "「不落因果」與「不昧因果」差一字，意境天壤。前者誤以為修行可逃避因果；後者是清醒地了知因果、不被因果所迷。大修行人因果宛然，但不為所縛。"
+          },
+          {
+            title: "一日不作一日不食",
+            question: "百丈立清規，躬耕自食，「一日不作，一日不食。」\n年老後，弟子藏去農具以阻之。\n百丈遂一日不食。",
+            answer: "百丈以身示法，出家人自食其力，勞動即修行。「一日不作，一日不食」成為叢林家風，亦是禪的生活化——修行不在蒲團上，在鋤頭裡。"
+          },
+          {
+            title: "大雄峰",
+            question: "僧問：「如何是奇特事？」\n百丈曰：「獨坐大雄峰。」",
+            answer: "「大雄峰」是百丈所居之山，亦是自性的象徵——孤峻清峭，不與萬物雜。「獨坐大雄峰」即安住自性，不被塵境所動。此即「奇特」——無奇無特，安然自在。"
+          }
+        ]
+      },
+      {
+        name: "洞山普利禪寺",
+        sub: "江西·宜豐",
+        master: "洞山良价",
+        koans: [
+          {
+            title: "麻三斤",
+            question: "僧問：「如何是佛？」\n洞山曰：「麻三斤。」",
+            answer: "麻三斤是具體的重量、現實的事物，無法以玄義解釋。佛即是當下現成的一切，不需另覓。《碧巖錄》第十二則。禪師以最尋常的稱量之語，截斷諸葛思量。"
+          },
+          {
+            title: "渡水睹影",
+            question: "洞山涉水，偶見水中倒影，豁然大悟，作偈曰：\n「切忌從他覓，迢迢與我疏。我今獨自往，處處得逢渠。渠今正是我，我今不是渠。應須恁麼會，方得契如如。」",
+            answer: "「渠今正是我，我今不是渠」——影子（渠）映現了自我，但自我不等同於影像。洞山由此悟「回互」之旨，即曹洞宗的「正偏回互」義理根源。"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    region: "湖南湖北",
+    locations: [
+      {
+        name: "德山崇聖院",
+        sub: "湖南·常德",
+        master: "德山宣鑒",
+        koans: [
+          {
+            title: "德山棒",
+            question: "德山每上堂，僧入門便棒，謂之「德山棒」。\n問：「今日問，明日問，此是學人過；不問，又是學人過，如何？」\n德山棒之。",
+            answer: "問與不問皆挨棒，因為執著於「問答」本身即是障礙。德山棒如電光石火，直接打掉學人的思量，令其在措手不及中見本來。"
+          },
+          {
+            title: "婆子燒庵",
+            question: "有婆子供養一庵主二十年，命一女子送食，令抱定而問：「正與麼時如何？」\n庵主曰：「枯木倚寒巖，三冬無暖氣。」\n婆子聞，曰：「我二十年只養得個俗漢！」\n遂燒庵逐之。",
+            answer: "「枯木倚寒巖」雖境界枯淡，卻仍是逃入空寂的一種躲避，不能靈活應機。婆子燒庵是試驗，庵主未能在那一機緣中自由展現，故被驅逐。禪非死水，應是活潑潑地。"
+          },
+          {
+            title: "點心",
+            question: "德山南下，遇一老婆賣點心。\n老婆問：「座主擔的是什麼文字？」\n德山曰：「《金剛經》疏鈔。」\n老婆曰：「《金剛經》道：過去心不可得，現在心不可得，未來心不可得，未審座主點的是哪個心？」\n德山無語。",
+            answer: "賣點心的老婆以《金剛經》中「三心不可得」反問德山，使這位《金剛經》疏鈔大師語塞。此即外在博學不敵內在真見。德山由此轉向禪門，後投龍潭崇信得法。"
+          }
+        ]
+      },
+      {
+        name: "南泉院",
+        sub: "安徽·池州",
+        master: "南泉普願",
+        koans: [
+          {
+            title: "南泉斬貓",
+            question: "南泉因東西兩堂爭貓，師乃提起貓兒，曰：「大眾道得即救，道不得即斬卻也。」\n眾無對，師斬之。\n趙州自外歸，師舉前語，趙州乃脫草鞋，安頭上而出。\n師曰：「子若在，即救得貓兒。」",
+            answer: "眾僧落入是非概念中，無法回應。趙州以「脫鞋安頭」這一顛倒之舉示現超越分別。若在場，此舉即能救貓——非執概念，而是直截呈現。"
+          },
+          {
+            title: "平常心是道",
+            question: "趙州問：「如何是道？」\n南泉曰：「平常心是道。」\n趙州曰：「還可趣向否？」\n南泉曰：「擬向即乖。」\n趙州曰：「不擬如何知是道？」\n南泉曰：「道不屬知，不屬不知；知是妄覺，不知是無記。」",
+            answer: "平常心——無造作、無分別、無取捨——即是道。一旦「趣向」，便是造作，便乖離道。道在日用中，不假追求，但若有意「不追求」，也是另一種追求。"
+          }
+        ]
+      },
+      {
+        name: "大林寺（傳說地）",
+        sub: "湖南·衡山",
+        master: "南嶽懷讓",
+        koans: [
+          {
+            title: "汝師是誰",
+            question: "六祖問懷讓：「甚處來？」\n讓曰：「嵩山來。」\n六祖曰：「什麼物恁麼來？」\n讓罔措，至八年後，方省，白曰：「某甲有個會處。」\n六祖問：「作麼生？」\n讓曰：「說似一物即不中。」",
+            answer: "「說似一物即不中」——本性超越一切名言形容，一旦說出，即非是。八年的默然深思，換來這一句「說不得」的直接，反映禪的核心：不可言詮。"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    region: "浙江",
+    locations: [
+      {
+        name: "雪竇山資聖禪寺",
+        sub: "浙江·寧波",
+        master: "雪竇重顯／圓悟克勤",
+        koans: [
+          {
+            title: "碧巖第一則：佛祖之師",
+            question: "僧問巴陵：「提婆宗旨如何？」\n巴陵曰：「銀碗裡盛雪。」\n（《碧巖錄》第一則相關）",
+            answer: "「銀碗裡盛雪」——同色異質，似同實異。提婆宗旨之妙，在於差別中見平等，平等中有差別。雪竇以詩偈頌古百則，圓悟垂示著語，成《碧巖錄》。"
+          }
+        ]
+      },
+      {
+        name: "徑山萬壽禪寺",
+        sub: "浙江·杭州",
+        master: "大慧宗杲",
+        koans: [
+          {
+            title: "看話頭",
+            question: "大慧示眾：「參禪須看個話頭。看來看去，忽然桶底脫落，自然豁開本地風光。」\n問：「如何是話頭？」\n大慧曰：「如趙州無字，時時提撕，不得作有無會，不得作道理會。」",
+            answer: "大慧宗杲集中提倡「看話禪」，以「趙州無」等話頭凝聚疑情，打成一片，一旦疑團打破，頓然開悟。此為宋代禪宗的重要轉型，影響後世深遠。"
+          }
+        ]
+      },
+      {
+        name: "靈隱寺",
+        sub: "浙江·杭州",
+        master: "各代宗師",
+        koans: [
+          {
+            title: "春有百花",
+            question: "無門慧開曰：\n「春有百花秋有月，夏有涼風冬有雪。\n若無閒事掛心頭，便是人間好時節。」",
+            answer: "此為《無門關》序偈，道盡禪的生活旨趣。春夏秋冬各有其美，心無掛礙，每個時節都是好時節。禪不在別處，在心的清淨無礙。"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    region: "海外",
+    locations: [
+      {
+        name: "松蔭寺（正受庵）",
+        sub: "日本·駿河",
+        master: "白隱慧鶴",
+        koans: [
+          {
+            title: "隻手音聲",
+            question: "白隱問學人：「兩手相擊則有聲，如何是隻手之聲？」",
+            answer: "「隻手音聲」是白隱發明的公案。兩手相擊有聲，人人知曉；隻手如何有聲？此問令學人截斷思量，直接面對無法用概念回答的現實。白隱以此公案接引日本禪者，影響極深。"
+          },
+          {
+            title: "坐禪和讚",
+            question: "白隱和讚：「眾生本來是佛，水と氷の如くにて、水を離れて氷なく、衆生の外に佛なし。」\n（眾生外無佛，猶如冰外無水。）",
+            answer: "白隱以冰與水比喻眾生與佛的關係：冰即是水，眾生即是佛。迷時是冰，悟時是水，體性無二。《坐禪和讚》廣傳日本，成為日本臨濟禪的重要文獻。"
+          }
+        ]
+      },
+      {
+        name: "建仁寺系統",
+        sub: "日本·京都",
+        master: "榮西（歷史）／各代禪師",
+        koans: [
+          {
+            title: "庭上一樹松",
+            question: "問：「如何是祖師西來意？」\n師曰：「庭上一樹松。」\n（日本禪師常用語）",
+            answer: "庭院中的松樹——當下現成，不假他求。「西來意」無非眼前這一棵松，問者若能在此直下承當，便已得禪旨。此類公案在日本臨濟禪廣泛流傳。"
+          }
+        ]
+      }
+    ]
+  }
+];
+
+function renderData(filtered) {
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+  filtered.forEach(region => {
+    const div = document.createElement('div');
+    div.className = 'region';
+    div.dataset.region = region.region;
+    div.innerHTML = `<div class="region-title">${region.region}</div>
+      <div class="locations-grid">${region.locations.map(loc => renderLocation(loc)).join('')}</div>`;
+    main.appendChild(div);
+  });
+  attachKoanListeners();
+}
+
+function renderLocation(loc) {
+  const koans = loc.koans.map((k, i) => `
+    <div class="koan-item" data-index="${i}">
+      <div class="koan-title">${k.title}</div>
+      <div class="koan-body">
+        <div class="koan-question">${k.question.replace(/\n/g, '<br>')}</div>
+        <div class="koan-label" style="margin-top:0.6rem">— 指月 —</div>
+        <div class="koan-answer">${k.answer}</div>
+      </div>
+    </div>`).join('');
+  return `
+    <div class="location-card">
+      <div class="location-header">
+        <span class="location-name">${loc.name}</span>
+        <span class="location-sub">${loc.sub}</span>
+        <span class="master-name">${loc.master}</span>
+      </div>
+      <div class="koans-list">${koans}</div>
+      <div class="hidden-count">共 ${loc.koans.length} 則公案</div>
+    </div>`;
+}
+
+function attachKoanListeners() {
+  document.querySelectorAll('.koan-item').forEach(item => {
+    item.addEventListener('click', () => item.classList.toggle('open'));
+  });
+}
+
+function filterRegion(region, btn) {
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const filtered = region === 'all' ? data : data.filter(r => r.region === region);
+  renderData(filtered);
+}
+
+renderData(data);
+</script>
+</body>
+</html>
