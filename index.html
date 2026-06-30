@@ -192,6 +192,19 @@
   .startline{text-align:center; z-index:10; position:relative; margin:2px auto 0; color:#b06fae; font-weight:800;
     font-size:.9rem; letter-spacing:.1em;}
   .startline .big{font-size:1.4rem;}
+  /* 時空地圖入口 */
+  .mapcta{text-align:center; position:relative; z-index:11; margin:12px auto 0;}
+  .mapbtn{display:inline-block; text-decoration:none; font-weight:900; letter-spacing:.05em;
+    font-size:clamp(.92rem,3.4vw,1.12rem); color:#fff; padding:12px 26px; border-radius:999px;
+    background:linear-gradient(120deg,#7bd3ff,#b48cff,#ff9ec4); background-size:200% 100%;
+    box-shadow:0 8px 20px rgba(140,110,220,.42); border:2.5px solid rgba(255,255,255,.85);
+    animation:bob 4.5s ease-in-out infinite, shine 6s linear infinite;
+    transition:transform .18s, box-shadow .18s;}
+  .mapbtn:hover{transform:translateY(-3px) scale(1.04); box-shadow:0 13px 28px rgba(140,110,220,.55);}
+  .mapbtn:active{transform:scale(.97);}
+  @keyframes shine{0%{background-position:0% 50%;}100%{background-position:200% 50%;}}
+  .footlink{display:inline-block; margin:8px 6px 0; color:#b06fae; font-weight:800; text-decoration:none; font-size:.84rem;}
+  .footlink:hover{text-decoration:underline;}
 </style>
 </head>
 <body>
@@ -210,6 +223,8 @@
 
 <div class="startline"><span class="big">🚩</span><br>從這裡出發，沿著光之路認識每一位禪師！</div>
 
+<div class="mapcta"><a href="時空地圖.html" class="mapbtn">🗺️ 打開禪宗時空大地圖 ✨</a></div>
+
 <main id="journey">
   <svg id="pathsvg" preserveAspectRatio="none"><path class="pth" id="pthMain"/><path class="pth-dash" id="pthDash"/></svg>
   <div id="stops"></div>
@@ -218,6 +233,7 @@
 <footer>
   寶嚴禪寺 · 給小朋友的禪宗公案小遊戲　🪷<br>
   <span style="font-size:.72rem">故事改編自《禪宗法脈》原典，點選每位禪師可看真正的古文出處</span><br>
+  <a href="時空地圖.html" class="footlink">🗺️ 禪宗時空大地圖</a><br>
   <button class="reset" id="resetBtn">🔄 重新開始冒險</button>
 </footer>
 

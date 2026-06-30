@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>禪宗公案時空地圖 · 跑江湖</title>
+<style>
+  :root{
+    --ink:#4a3b6b; --ink2:#6b5a8c; --paper:#fffdf8;
+    --shadow:rgba(120,90,170,.22);
+    --gold:#f5a623; --gold2:#f7c948;
+    /* 法脈分支顏色 */
+    --br-da:#8e6fe0;   /* 達摩源流 */
+    --br-niu:#39a86b;  /* 牛頭旁系 */
+    --br-liu:#f0a800;  /* 六祖正脈 */
+    --br-nan:#e8623d;  /* 南嶽—洪州系 */
+    --br-qing:#4f86e0; /* 青原—石頭系 */
+    font-size:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC","Segoe UI",sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,#bfe9ff 0%,#d9e6ff 22%,#f0e0ff 45%,#ffe6f3 68%,#fff3d9 100%);
+    background-attachment:fixed;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  #sky{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;}
+  .spark{position:absolute; width:5px; height:5px; border-radius:50%; background:#fff;
+    box-shadow:0 0 8px 2px rgba(255,255,255,.9); animation:twinkle 3s ease-in-out infinite;}
+  @keyframes twinkle{0%,100%{opacity:.2; transform:scale(.7);}50%{opacity:1; transform:scale(1.3);}}
+
+  /* ---------- header ---------- */
+  header{position:relative; z-index:30; text-align:center; padding:14px 12px 6px;}
+  h1{margin:0; font-size:clamp(1.7rem,6vw,2.8rem); letter-spacing:.14em; font-weight:900;
+    background:linear-gradient(120deg,#ff8fb4,#ffb24d,#7bd3ff,#b48cff);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    text-shadow:0 3px 10px rgba(255,255,255,.6); filter:drop-shadow(0 2px 2px rgba(180,140,220,.25));}
+  .subtitle{margin:.3em 0 .2em; font-size:clamp(.8rem,3vw,1rem); color:var(--ink2); letter-spacing:.12em;}
+  .subtitle b{color:#e76fa1;}
+
+  /* ---------- time control ---------- */
+  #timebar{position:sticky; top:0; z-index:40; margin:6px auto 4px; max-width:940px;
+    background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(255,255,255,.78));
+    backdrop-filter:blur(7px); border-radius:18px; padding:12px 16px 14px;
+    box-shadow:0 8px 22px var(--shadow);}
+  .tb-top{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+  .yearbox{font-weight:900; color:var(--ink); white-space:nowrap;}
+  .yearbox .yr{font-size:1.35rem; color:#e76fa1; letter-spacing:.02em;}
+  .dyn{display:inline-block; font-size:.78rem; font-weight:800; color:#fff; background:var(--br-da);
+    padding:2px 11px; border-radius:999px; margin-left:6px; vertical-align:middle;}
+  .tb-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .pill{border:none; cursor:pointer; font-weight:800; font-size:.85rem; padding:8px 14px; border-radius:999px;
+    color:#fff; background:linear-gradient(120deg,#ff9ec4,#ffb24d); box-shadow:0 5px 13px rgba(245,140,180,.4);
+    transition:transform .15s;}
+  .pill:hover{transform:translateY(-2px);} .pill:active{transform:scale(.96);}
+  .pill.blue{background:linear-gradient(120deg,#7bd3ff,#9be8c9); box-shadow:0 5px 13px rgba(110,200,230,.4);}
+  .prog{font-weight:800; color:var(--ink2); font-size:.85rem; white-space:nowrap;}
+  .prog b{color:var(--gold);}
+  #slider{width:100%; margin:12px 0 2px; -webkit-appearance:none; appearance:none; height:10px; border-radius:999px;
+    background:linear-gradient(90deg,#c9b6f2,#ffd0e4,#ffe6a8); outline:none;}
+  #slider::-webkit-slider-thumb{-webkit-appearance:none; width:26px; height:26px; border-radius:50%;
+    background:#fff; border:4px solid #e76fa1; cursor:pointer; box-shadow:0 3px 8px var(--shadow); margin-top:0;}
+  #slider::-moz-range-thumb{width:22px; height:22px; border-radius:50%; background:#fff; border:4px solid #e76fa1; cursor:pointer;}
+  .eras{display:flex; justify-content:space-between; font-size:.66rem; color:#9a8bc0; font-weight:700; margin-top:2px; letter-spacing:.02em;}
+
+  /* ---------- map ---------- */
+  #mapwrap{position:relative; z-index:10; max-width:940px; margin:6px auto 16px; padding:0 8px;}
+  #map{width:100%; height:auto; display:block; border-radius:22px;
+    box-shadow:0 14px 34px var(--shadow); background:#eaf6ff; overflow:visible;}
+  .pin{cursor:pointer; transition:opacity .5s ease;}
+  .pin .badge-bg{fill:#fff; stroke-width:3.5; transition:transform .25s;}
+  .pin:hover .badge-bg{filter:drop-shadow(0 4px 7px rgba(80,50,140,.35));}
+  .pin .nm{font-weight:900; font-size:15px; fill:var(--ink); paint-order:stroke;
+    stroke:#fff; stroke-width:4px; stroke-linejoin:round; text-anchor:middle;}
+  .pin .em{font-size:26px; text-anchor:middle; dominant-baseline:central; pointer-events:none;}
+  .pin .crown{font-size:18px; text-anchor:middle; pointer-events:none;}
+  .pin .halo{fill:none; stroke:var(--gold2); stroke-width:3; opacity:0;}
+  .pin.house .halo{opacity:1; animation:ring 2.6s ease-in-out infinite;}
+  @keyframes ring{0%,100%{stroke-width:3; opacity:.5;}50%{stroke-width:6; opacity:1;}}
+  .pin.visited .badge-bg{stroke:var(--gold2); stroke-width:5;}
+  .pin .star{font-size:15px; text-anchor:middle; opacity:0; pointer-events:none;}
+  .pin.visited .star{opacity:1;}
+  /* ghost (尚未出現) */
+  .pin.ghost{opacity:.13; pointer-events:none;}
+  .pin.ghost .nm,.pin.ghost .crown,.pin.ghost .star{opacity:0;}
+  .pin.fresh .badge-bg{animation:pulseIn .7s cubic-bezier(.2,.9,.3,1.5);}
+  @keyframes pulseIn{0%{transform:scale(0);}70%{transform:scale(1.25);}100%{transform:scale(1);}}
+
+  .edge{fill:none; stroke-linecap:round; transition:opacity .6s ease, stroke-dashoffset .6s;}
+  .edge.hidden{opacity:0;}
+  .river{fill:none; stroke:#8fd0ff; stroke-linecap:round; opacity:.75;}
+  .riverlabel{fill:#4aa3d9; font-size:15px; font-weight:800; opacity:.8;}
+  .regionlabel{fill:#a98fd0; font-weight:900; opacity:.32; text-anchor:middle;}
+  .jianghu-label{fill:#e08a00; font-weight:900; text-anchor:middle; opacity:.85;}
+
+  /* ---------- legend ---------- */
+  #legend{max-width:940px; margin:0 auto 10px; padding:12px 16px; background:rgba(255,255,255,.78);
+    border-radius:16px; box-shadow:0 6px 16px var(--shadow); display:flex; flex-wrap:wrap;
+    gap:8px 16px; justify-content:center; align-items:center; font-size:.82rem; font-weight:700; color:var(--ink2);}
+  .lg{display:inline-flex; align-items:center; gap:6px;}
+  .lg i{width:22px; height:5px; border-radius:999px; display:inline-block;}
+  .lg.dash i{background-image:repeating-linear-gradient(90deg,currentColor 0 5px,transparent 5px 10px); height:4px;}
+  #jhnote{max-width:940px; margin:0 auto 18px; padding:13px 18px; border-radius:16px; text-align:center;
+    background:linear-gradient(120deg,#fff7e0,#ffeef6); border:2px dashed #ffd98a; color:#7a5d2e;
+    font-size:.92rem; line-height:1.7;}
+  #jhnote b{color:#e08a00;}
+
+  /* ---------- modal (沿用跑江湖卡片風格) ---------- */
+  #overlay{position:fixed; inset:0; z-index:100; background:rgba(90,70,130,.45); backdrop-filter:blur(4px);
+    display:none; align-items:center; justify-content:center; padding:16px;}
+  #overlay.show{display:flex; animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  #card{background:var(--paper); width:min(560px,94vw); max-height:90vh; overflow-y:auto; border-radius:26px;
+    box-shadow:0 24px 60px rgba(80,50,140,.35); position:relative; animation:rise .35s cubic-bezier(.2,.9,.3,1.3);}
+  @keyframes rise{from{transform:translateY(40px) scale(.95); opacity:0;}to{transform:translateY(0) scale(1); opacity:1;}}
+  .card-top{position:relative; padding:22px 22px 16px; text-align:center; border-radius:26px 26px 0 0;
+    background:linear-gradient(160deg,var(--c1),var(--c2));}
+  .card-top .cbadge{width:84px; height:84px; border-radius:50%; background:#fff; margin:0 auto 6px;
+    display:flex; align-items:center; justify-content:center; font-size:46px; box-shadow:0 8px 18px rgba(0,0,0,.18);}
+  .card-top h2{margin:.1em 0 .1em; color:#fff; font-size:1.5rem; text-shadow:0 2px 4px rgba(0,0,0,.18);}
+  .card-top .cnick{color:#fff; opacity:.95; font-size:.92rem; font-weight:700;}
+  .card-top .cmeta{color:#fff; opacity:.95; font-size:.78rem; margin-top:6px; line-height:1.6;}
+  #closeBtn{position:absolute; right:14px; top:12px; width:36px; height:36px; border:none; border-radius:50%;
+    background:rgba(255,255,255,.85); font-size:20px; cursor:pointer; color:var(--ink); font-weight:900;
+    box-shadow:0 3px 8px rgba(0,0,0,.15);}
+  .card-body{padding:20px 22px 26px;}
+  .qlabel{display:inline-block; background:#fff0d6; color:#d98b00; font-weight:900; font-size:.78rem;
+    padding:3px 12px; border-radius:999px; margin-bottom:8px;}
+  .question{font-size:1.15rem; font-weight:800; line-height:1.6; color:var(--ink); margin:0 0 4px;}
+  .ktitle{font-size:.82rem; color:var(--ink2); margin:6px 0 0;}
+  .bigbtn{display:block; width:100%; margin-top:16px; border:none; cursor:pointer; font-weight:900;
+    font-size:1.05rem; padding:14px; border-radius:18px; color:#fff; letter-spacing:.04em;
+    background:linear-gradient(120deg,#ff9ec4,#ffb24d); box-shadow:0 8px 18px rgba(245,140,180,.45);
+    transition:transform .15s, box-shadow .15s;}
+  .bigbtn:hover{transform:translateY(-2px);} .bigbtn:active{transform:scale(.98);}
+  .bigbtn.blue{background:linear-gradient(120deg,#7bd3ff,#9be8c9); box-shadow:0 8px 18px rgba(110,200,230,.45);}
+  .reveal{display:none; margin-top:14px;} .reveal.show{display:block;}
+  .story p{margin:0 0 12px; font-size:1.04rem; line-height:1.8; color:#3f3360;
+    opacity:0; transform:translateY(10px); animation:lineIn .5s forwards;}
+  .fact{margin-top:8px; background:linear-gradient(120deg,#fff7e0,#ffeef6); border-radius:16px; padding:14px 16px;
+    font-size:1rem; line-height:1.7; color:#7a5d2e; border:2px dashed #ffd98a;}
+  .fact b{color:#e08a00;}
+  .lineage{margin-top:10px; background:linear-gradient(120deg,#eef3ff,#f3eeff); border-radius:16px; padding:12px 16px;
+    font-size:.95rem; line-height:1.7; color:#5a5088; border:2px dashed #c9b6f2;}
+  .lineage b{color:#7e5fd0;}
+  .src{margin-top:12px; font-size:.78rem;}
+  .src summary{cursor:pointer; color:#a98fd0; font-weight:700;}
+  .src p{margin:8px 0 0; color:#8a7ab0; line-height:1.7; background:#f4efff; padding:10px 12px; border-radius:12px;
+    font-family:"Noto Serif TC",serif;}
+  @keyframes lineIn{to{opacity:1; transform:translateY(0);}}
+  .quiz{display:none; margin-top:16px;} .quiz.show{display:block;}
+  .quiz h3{font-size:1.05rem; margin:0 0 12px; color:var(--ink); text-align:center;}
+  .opt{display:block; width:100%; text-align:left; margin:9px 0; padding:13px 16px; border-radius:16px;
+    border:2.5px solid #eadcff; background:#fff; cursor:pointer; font-size:1.02rem; font-weight:700; color:var(--ink);
+    transition:all .15s;}
+  .opt:hover{border-color:#c9a8ff; transform:translateX(4px);}
+  .opt.correct{border-color:#5bcf8e; background:#e9fbef; color:#2f9c5c;}
+  .opt.wrong{border-color:#ff9aa2; background:#fff0f1; color:#e25563; animation:shake .4s;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-7px);}75%{transform:translateX(7px);}}
+  .qfeed{margin-top:12px; text-align:center; font-weight:800; font-size:1.02rem; min-height:1.4em;}
+
+  footer{position:relative; z-index:10; text-align:center; padding:6px 16px 30px; color:#9a8bc0; font-size:.78rem; line-height:1.7;}
+  footer a{color:#b06fae; font-weight:800; text-decoration:none;}
+  #confetti{position:fixed; inset:0; z-index:200; pointer-events:none;}
+</style>
+</head>
+<body>
+
+<div id="sky"></div>
+
+<header>
+  <h1>禪宗公案時空地圖</h1>
+  <div class="subtitle">✦ 跑江湖 ✦ <b>看禪法如何走過 400 年、開枝散葉</b></div>
+</header>
+
+<div id="timebar">
+  <div class="tb-top">
+    <div class="yearbox">西元 <span class="yr" id="yrTxt">960</span> 年 <span class="dyn" id="dynTxt">五代十國</span></div>
+    <div class="tb-actions">
+      <span class="prog">⭐ 已探索 <b id="progTxt">0</b> / 17</span>
+      <button class="pill" id="playBtn">▶ 重播時空之旅</button>
+      <button class="pill blue" id="allBtn">顯示全部</button>
+    </div>
+  </div>
+  <input type="range" id="slider" min="500" max="960" value="960" step="1">
+  <div class="eras">
+    <span>南北朝</span><span>隋‧初唐</span><span>盛唐</span><span>中唐</span><span>晚唐</span><span>五代</span>
+  </div>
+</div>
+
+<div id="mapwrap">
+  <svg id="map" viewBox="0 0 1000 760" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="sea" cx="70%" cy="60%" r="80%">
+        <stop offset="0%" stop-color="#cdeeff"/><stop offset="100%" stop-color="#a9ddff"/>
+      </radialGradient>
+      <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f4ecd4"/><stop offset="55%" stop-color="#e7f0cf"/>
+        <stop offset="100%" stop-color="#dcefc6"/>
+      </linearGradient>
+      <radialGradient id="jhglow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(245,166,35,.35)"/><stop offset="70%" stop-color="rgba(245,166,35,.10)"/>
+        <stop offset="100%" stop-color="rgba(245,166,35,0)"/>
+      </radialGradient>
+    </defs>
+
+    <rect x="0" y="0" width="1000" height="760" fill="url(#sea)"/>
+    <!-- 陸地（示意） -->
+    <path d="M 40 120 C 200 70, 420 50, 560 48 C 700 46, 820 80, 905 150
+             C 945 200, 928 270, 930 330 C 932 400, 905 450, 880 500
+             C 840 560, 760 620, 600 690 C 470 740, 330 752, 230 720
+             C 150 692, 110 640, 92 540 C 74 450, 70 380, 62 300
+             C 56 230, 44 175, 40 120 Z"
+          fill="url(#land)" stroke="#cdbd92" stroke-width="2.5" opacity=".96"/>
+
+    <!-- 江湖光暈：江西+湖南 -->
+    <ellipse cx="330" cy="480" rx="270" ry="150" fill="url(#jhglow)"/>
+    <text class="jianghu-label" x="330" y="430" font-size="30" letter-spacing="6">江　湖</text>
+    <text class="jianghu-label" x="330" y="455" font-size="13" opacity=".7">江西 · 湖南 — 唐代禪宗的心臟</text>
+
+    <!-- 河流 -->
+    <path class="river" d="M 60 200 C 220 165, 360 230, 520 185 C 660 148, 800 200, 935 160" stroke-width="9"/>
+    <text class="riverlabel" x="120" y="190">黃河</text>
+    <path class="river" d="M 70 405 C 240 360, 380 440, 540 392 C 700 348, 820 405, 935 360" stroke-width="11"/>
+    <text class="riverlabel" x="690" y="345">長江</text>
+
+    <!-- 區域標籤 -->
+    <text class="regionlabel" x="300" y="150" font-size="26" letter-spacing="8">中原</text>
+    <text class="regionlabel" x="700" y="270" font-size="22" letter-spacing="6">江淮</text>
+    <text class="regionlabel" x="850" y="430" font-size="22" letter-spacing="6">江南</text>
+    <text class="regionlabel" x="650" y="560" font-size="22" letter-spacing="6">嶺南</text>
+
+    <g id="edges"></g>
+    <g id="pins"></g>
+  </svg>
+</div>
+
+<div id="legend"></div>
+
+<div id="jhnote">
+  🧭 你發現了嗎？這個遊戲叫「<b>跑江湖</b>」，其實「江湖」就是 <b>江</b>西＋<b>湖</b>南！
+  唐朝的時候，最厲害的禪師大多在這兩個地方修行、教學，所以這裡就是禪宗的大本營。
+  <br>把時間軸從左邊拉到右邊，看看禪法怎麼從北方（達摩）一路傳到南方（惠能），再開出「<b>五大家族</b>」吧！
+</div>
+
+<footer>
+  寶嚴禪寺 · 給小朋友的禪宗公案時空地圖　🪷<br>
+  <span style="font-size:.72rem">地圖位置與年代為示意；故事改編自《禪宗法脈》原典，點選禪師可看古文出處</span><br>
+  <a href="index.html">← 回到「跑江湖」光之路</a>
+</footer>
+
+<div id="overlay"><div id="card"></div></div>
+<canvas id="confetti"></canvas>
+
+<script>
+/* ============ 17 位禪師資料（含地理座標 / 顯化年 / 法脈分支） ============ */
+const DATA = [
+  {id:"bodhidharma",name:"菩提達摩",nick:"面壁九年達摩爺爺",loc:"河南·嵩山 少林寺",era:"？–536（南北朝·梁）",year:527,x:236,y:206,br:"da",house:"",emoji:"🧱",c1:"#cdbcf5",c2:"#8e6fe0",
+   title:"面壁九年",hook:"有個和尚對著一面牆壁坐了整整九年，到底在看什麼？",
+   story:["很久很久以前，有位從印度來的達摩爺爺。","他來到中國少林寺，做了一件超怪的事。","他每天面對著一片牆壁坐著，安安靜靜，一句話都不說。","就這樣坐了整整九年！沒有人猜得到他在想什麼。","大家都叫他「看牆壁的婆羅門」。","原來他是在安靜地練習看自己的心呢。"],
+   fact:"安靜下來、不被吵雜打擾，反而更能聽見自己心裡真正的聲音。他是把禪宗帶來中國的「初祖」。",
+   quiz:{q:"達摩爺爺對著牆壁靜靜坐了多久？",opts:["九天","九個月","九年"],ans:2,reward:"答對了！整整九年喔，這叫做超級有耐心的『面壁』！"},
+   src:"止嵩山少林寺，面壁坐禪，終日默然，人莫之測，謂之「壁觀婆羅門」。"},
+
+  {id:"farong",name:"牛頭法融",nick:"百鳥送花的懶融",loc:"江蘇·牛頭山 幽棲寺",era:"594–657（唐初）",year:640,x:752,y:312,br:"niu",house:"",emoji:"🐦",c1:"#aedcf2",c2:"#4fa3d9",
+   title:"百鳥啣花",hook:"有個和尚在山洞裡打坐，連小鳥都飛來叼著花送給他！這是怎麼回事？",
+   story:["法融和尚跑到牛頭山的山洞裡，安安靜靜地打坐修行。","他坐得好專心、心好平靜，整個山林都變得很祥和。","神奇的事發生了——好多好多小鳥，竟然啣著花飛來找他！","小鳥們把花放在他身邊，好像在送禮物給他。","後來道信老師來找他，還故意嚇唬他、又寫了個『佛』字考他。","法融學會了：心不要老是緊抓著什麼，自然就會輕鬆自在。"],
+   fact:"當一個人內心安定平和，身邊的環境和小動物也會感受到那份寧靜。他開創了禪宗的旁支「牛頭宗」。",
+   quiz:{q:"法融和尚在山洞打坐時，發生了什麼神奇的事？",opts:["小鳥啣花來送他","下起了金幣雨","山洞會說話"],ans:0,reward:"答對了！心一平靜，連小鳥都想來作伴呢！"},
+   src:"後入牛頭山幽棲寺北巖之石室，有百鳥啣花之異。"},
+
+  {id:"huineng",name:"六祖慧能",nick:"是心在動慧能",loc:"廣東·廣州 法性寺",era:"638–713（初唐）",year:677,x:262,y:706,br:"liu",house:"",emoji:"🚩",c1:"#ffe79a",c2:"#f2b705",
+   title:"風動幡動",hook:"是風在動，還是旗子在動？兩個和尚吵翻天，你猜誰對？",
+   story:["有一天，寺廟裡的旗子被風吹得飄呀飄。","兩個和尚吵了起來：一個說「是風在動！」一個說「不對，是旗子在動！」","他們吵個沒完，誰也不讓誰。","這時慧能走過來，淡淡地說了一句話。","「不是風動，也不是旗子動——是你們的『心』在動啊！」","大家都驚呆了，原來最會動的，是我們自己的心。"],
+   fact:"同一件事，每個人感受不同，因為是我們的『心』在看、在判斷。他就是大名鼎鼎的「六祖」，後面所有的禪師幾乎都是他的子孫。",
+   quiz:{q:"慧能說，真正在動的是什麼？",opts:["風","旗子","人的心"],ans:2,reward:"答對了！是心在動喔，這句話超有名！"},
+   src:"因二僧論風幡義，一曰風動，一曰幡動，議論不已。師進曰：「不是風動，不是幡動，仁者心動。」"},
+
+  {id:"niaoke",name:"鳥窠道林",nick:"住在樹上的鳥窩和尚",loc:"浙江·杭州 秦望山",era:"741–824（中唐）",year:790,x:875,y:402,br:"niu",house:"",emoji:"🪺",c1:"#bdeeb0",c2:"#5fb85b",
+   title:"鳥窠禪師（住在大樹上）",hook:"有個和尚不住房子，竟然住在大樹上，跟喜鵲當鄰居！為什麼呀？",
+   story:["有位道林和尚，看上了一棵超大的松樹。","這棵樹枝葉茂密、彎彎曲曲，像一把大大的雨傘。","他乾脆就爬上去，住在樹上啦！","大家都叫他『鳥窩和尚』，因為他住得像鳥巢一樣。","更有趣的是，旁邊還有喜鵲來築巢，跟他當鄰居。","小鳥一點都不怕他，因為他心地溫柔又善良。"],
+   fact:"心地善良溫柔的人，連小動物都願意親近他、信任他。他也屬於「牛頭宗」這一脈喔。",
+   quiz:{q:"鳥窠禪師為什麼叫這個名字？",opts:["他養了很多鳥","他住在大樹上像鳥巢","他長得像一隻鳥"],ans:1,reward:"答對了！他住在樹上跟喜鵲當鄰居，超酷的！"},
+   src:"見秦望山有長松，枝葉繁茂，盤屈如蓋，遂棲止其上，故時人謂之鳥窠禪師；復有鵲巢於其側，自然馴狎，故亦稱鵲巢和尚。"},
+
+  {id:"nanyang-huizhong",name:"南陽慧忠國師",nick:"考倒讀心術大師的國師",loc:"南陽·京城",era:"？–775（盛唐）",year:760,x:175,y:262,br:"liu",house:"",emoji:"🔮",c1:"#e9b8e3",c2:"#c25fb8",
+   title:"大耳三藏（讀心術考試）",hook:"有人號稱會讀心術，國師說：那你猜猜我現在在想什麼？結果呢？",
+   story:["有一位叫「大耳三藏」的人，說自己會讀心術，能知道別人在想什麼。","皇帝請國師來考考他。","國師問：「你猜我現在在哪裡？」三藏說：「您跑去看划龍舟啦！」","國師再問一次，三藏說：「您在橋上看人耍猴子！」兩次都猜中了。","國師第三次問，這次把心安靜下來，不亂想——三藏完全猜不到了！","原來心一安靜，讀心術就失靈囉。"],
+   fact:"別人能猜中你，常常是因為你的心一直亂跑。心安靜下來的時候，連讀心術都看不見你在想什麼。他是六祖慧能的大弟子之一。",
+   quiz:{q:"大耳三藏為什麼第三次猜不到國師在想什麼？",opts:["國師躲起來了","國師把心安靜下來，不亂想了","三藏太累了"],ans:1,reward:"太厲害了！心一安靜，連讀心術都失靈，是不是很妙？"},
+   src:"三藏纔見師便禮拜……師問曰：「汝道老僧只今在甚麼處？」……藏罔測，師叱曰：「這野狐精，他心通在甚麼處！」藏無對。"},
+
+  {id:"nanyue-huairang",name:"南嶽懷讓",nick:"磨磚變鏡子的怪老師",loc:"湖南·衡嶽",era:"677–744（盛唐）",year:720,x:205,y:520,br:"nan",house:"",emoji:"🪞",c1:"#a6ead8",c2:"#3fbfa0",
+   title:"磨磚成鏡",hook:"老師居然蹲在地上拚命磨一塊磚頭，說要把它磨成鏡子？這怎麼可能！",
+   story:["有個年輕和尚馬道一，每天拚命打坐，想變成佛。","懷讓老師跑來，拿一塊磚頭在石頭上用力磨呀磨。","馬道一好奇問：「您磨磚做什麼？」老師說：「磨成鏡子啊！」","馬道一笑：「磚頭怎麼可能磨成鏡子？」","老師回他：「磚頭磨不成鏡子，那光是坐著就能變成佛嗎？」","馬道一一聽，整個人都懂了。"],
+   fact:"光做表面功夫不會成功，重要的是用對方法、用心去做。他是六祖的弟子，教出了大名鼎鼎的馬祖。",
+   quiz:{q:"懷讓老師為什麼要在馬道一面前拚命磨一塊磚頭？",opts:["想提醒他：方法不對，再努力也沒用","因為磚頭很髒要洗乾淨","想做一面鏡子來照鏡子"],ans:0,reward:"答對了！用對方法比死命硬幹更重要喔。"},
+   src:"師乃取一磚，於彼庵前石上磨。一曰：「磨作甚麼？」師曰：「磨作鏡。」一曰：「磨磚豈得成鏡邪？」師曰：「磨磚既不成鏡，坐禪豈得作佛？」"},
+
+  {id:"mazu-daoyi",name:"馬祖道一",nick:"一口喝乾整條江的大師",loc:"江西·洪州",era:"709–788（盛唐）",year:760,x:495,y:452,br:"nan",house:"",emoji:"🌊",c1:"#a6dcea",c2:"#3fa8c9",
+   title:"一口吸盡西江水",hook:"想知道答案？大師說：「等你一口把整條大江的水喝光，我就告訴你！」",
+   story:["龐居士跑來問馬祖一個很難的問題。","馬祖回他：「等你一口氣把整條西江的水都喝光，我就告訴你答案。」","整條江的水怎麼可能一口喝光呢？","可是龐居士聽完這句，居然當場就懂了！","原來大師是想說：別老想用嘴巴問，有些道理要自己用心去體會。"],
+   fact:"有些問題的答案，不是用問的，是要自己親身去體會的。馬祖在江西教出超多徒弟，是禪宗大爆發的關鍵人物。",
+   quiz:{q:"馬祖叫龐居士做一件不可能的事，是什麼？",opts:["一口喝光整條江的水","一口吃光一座山","一步跳過大海"],ans:0,reward:"答對！這句怪話其實是要他自己去想通呢。"},
+   src:"龐蘊問：「不與萬法為侶者是什麼人？」師云：「待汝一口吸盡西江水，即向汝道。」龐蘊於言下領旨，頓悟玄機。"},
+
+  {id:"baizhang",name:"百丈懷海",nick:"不工作就不吃飯爺爺",loc:"江西·百丈山",era:"720–814（中唐）",year:790,x:448,y:425,br:"nan",house:"",emoji:"🌾",c1:"#f2dc92",c2:"#d9a93f",
+   title:"一日不作，一日不食",hook:"老和尚都那麼老了，徒弟把他的鋤頭藏起來，結果他做了一件讓大家嚇一跳的事！",
+   story:["百丈和尚年紀很大了，每天還是搶第一個去田裡幹活。","徒弟們很心疼，偷偷把他的鋤頭藏起來，叫他別累了。","找不到鋤頭，老和尚那天竟然一口飯都不吃。","大家急了問為什麼，他說：「我沒做事，怎麼好意思吃飯呢？」","於是他留下一句名言：「一天沒工作，就一天不吃飯。」"],
+   fact:"自己動手做事、不白拿別人的，這是一種很帥的負責任。他教出了溈山和黃檗兩位開宗的大師。",
+   quiz:{q:"徒弟把鋤頭藏起來後，百丈老和尚做了什麼？",opts:["生氣大罵","那天不吃飯","去睡覺"],ans:1,reward:"答對了！他用不吃飯告訴大家：做事和吃飯一樣重要！"},
+   src:"師凡作務執勞，必先於眾……既遍求作具不獲，而亦忘餐。故有「一日不作，一日不食」之語流播寰宇矣。"},
+
+  {id:"nanquan",name:"南泉普願",nick:"自己種田的草庵爺爺",loc:"安徽·池州 南泉山",era:"748–834（中唐）",year:800,x:636,y:372,br:"nan",house:"",emoji:"🐯",c1:"#ffd9a0",c2:"#f2a03d",
+   title:"南泉逢虎",hook:"三個和尚走山路撞見一隻大老虎，他們居然從老虎身邊走了過去！",
+   story:["杉山、歸宗、南泉三個和尚一起走山路。","走著走著，路上突然出現一隻大老虎！","三個人都好勇敢，一個一個從老虎旁邊平安走了過去。","過去之後，南泉問：「剛剛那隻老虎，看起來像什麼？」","歸宗說：「像一隻小貓。」杉山說：「像一隻小狗。」","南泉說：「我看見的，就是一隻大老虎！」"],
+   fact:"同樣一隻老虎，每個人心裡看到的都不一樣；南泉最特別，他誠實地說『就是老虎』。他是馬祖的徒弟，教出了趙州。",
+   quiz:{q:"路上遇到大老虎，南泉說牠看起來像什麼？",opts:["像一隻小貓","像一隻小狗","就是一隻大老虎"],ans:2,reward:"答對了！別人說像貓像狗，南泉最直接，老虎就是老虎，不騙自己。"},
+   src:"路逢一虎，各從虎邊過了。南泉問歸宗云：「適來見虎，似個什麼？」宗云：「似個貓兒。」"},
+
+  {id:"shigong-huizang",name:"石鞏慧藏",nick:"放下弓箭當和尚的獵人",loc:"江西",era:"生卒不詳（中唐）",year:780,x:452,y:515,br:"nan",house:"",emoji:"🏹",c1:"#ffc9b0",c2:"#f2784b",
+   title:"石鞏射箭",hook:"一個天天打獵的獵人，被馬祖一句話問到放下弓箭，再也不射動物了！他說了什麼？",
+   story:["石鞏本來是個獵人，最討厭和尚。","有天他追著鹿，跑過馬祖的小屋。馬祖問：「你射箭厲害嗎？」","獵人說：「我一箭射一隻！」馬祖說：「我一箭射一群！」","獵人嚇一跳：「動物都有生命，幹嘛射一整群？」","馬祖反問：「你既然知道，為什麼不射射看自己的壞念頭呢？」","獵人一聽，當場丟下弓箭，跟著馬祖出家了。"],
+   fact:"真正要打敗的不是別人，是自己心裡的壞念頭。他放下弓箭後，成了馬祖的徒弟。",
+   quiz:{q:"馬祖叫獵人射什麼，讓他放下了弓箭？",opts:["射自己心裡的壞念頭","射天上的鳥","射一座山"],ans:0,reward:"答對！戰勝自己，才是最厲害的人！"},
+   src:"曰：「彼此生命，何用射他一群？」師曰：「汝既知如是，何不自射？」……鞏擲下弓箭，投師出家。"},
+
+  {id:"zhaozhou",name:"趙州從諗",nick:"120歲喝茶爺爺",loc:"河北·趙州",era:"778–897（晚唐，世壽120）",year:860,x:412,y:74,br:"nan",house:"",emoji:"🍵",c1:"#a8e2d2",c2:"#3fb89a",
+   title:"喫茶去",hook:"不管你回答什麼，這位120歲的爺爺都只說三個字：『喝茶去』！為什麼？",
+   story:["趙州爺爺問一個新來的和尚：「你以前來過這裡嗎？」","和尚說：「來過。」趙州說：「喝茶去。」","他又問另一個和尚，那人說：「沒來過。」趙州還是說：「喝茶去。」","管事的人很疑惑：「來過、沒來過，您怎麼都叫人家喝茶去呀？」","趙州大喊一聲管事的名字，那人答：「在！」","趙州笑笑說：「喝茶去！」原來，平平常常地過好每一刻，就是最好的修行。"],
+   fact:"不論你是誰、來過沒有，都一樣值得好好喝一杯茶；平常心就是最好的態度。他是南泉的徒弟，活到 120 歲！",
+   quiz:{q:"不管和尚怎麼回答，趙州爺爺都叫他們做什麼？",opts:["去掃地","喝茶去","去睡覺"],ans:1,reward:"答對了！『喫茶去』是趙州最有名的話，平平常常過好每一刻最珍貴。"},
+   src:"師問新到：「曾到此間麼？」曰：「曾到」師曰：「喫茶去。」又問僧，僧曰：「不曾到。」師曰：「喫茶去。」……師召院主，主應喏。師曰：「喫茶去。」"},
+
+  {id:"guishan-lingyou",name:"溈山靈祐",nick:"踢倒水瓶當住持的廚師",loc:"湖南·大溈山",era:"771–853（晚唐）",year:830,x:168,y:476,br:"nan",house:"溈仰宗",emoji:"🏺",c1:"#c3ea9c",c2:"#7bc043",
+   title:"不得喚作淨瓶",hook:"師父問：「不准叫它水瓶，那它是什麼？」廚師一腳把水瓶踢倒就走人——竟然贏了！",
+   story:["百丈要選一個人去當新寺廟的住持。","他指著地上的水瓶說：「不准叫它水瓶，那你說它是什麼？」","大師兄想了半天，答得普普通通。","輪到當廚師的靈祐，他什麼都沒說，一腳就把水瓶踢倒，轉身走了！","百丈哈哈大笑：「大師兄輸啦！」於是廚師當上了住持。"],
+   fact:"有時候答案不一定要用嘴巴說，用行動也可以表達得很有力。他後來開創了禪宗五大家族之一「溈仰宗」喔！",
+   quiz:{q:"靈祐怎麼回答「這不是水瓶那是什麼」？",opts:["寫了一篇文章","一腳踢倒水瓶走人","說它是花瓶"],ans:1,reward:"答對！一個動作勝過千言萬語，他就這樣當上住持！"},
+   src:"即指淨瓶問曰：「不得喚作淨瓶，汝喚作甚麼？」……丈乃問師，師踢倒淨瓶便出去。丈笑曰：「第一座輸卻山子也。」"},
+
+  {id:"linji-yixuan",name:"臨濟義玄",nick:"大吼一聲的喝功祖師",loc:"鎮州·臨濟院",era:"？–866（晚唐）",year:850,x:356,y:44,br:"nan",house:"臨濟宗",emoji:"💥",c1:"#ffb6b6",c2:"#e85d5d",
+   title:"三度問，三度被打",hook:"他問師父問題，竟然三次都被打！後來才發現師父其實是為他好？",
+   story:["義玄是個很認真的年輕和尚，他鼓起勇氣去問師父黃檗一個大問題。","結果話還沒問完，師父就打了他一下。","他不放棄，又去問，又被打；第三次去問，還是被打！","他好難過，以為自己很笨，就跑去找另一位大愚禪師訴苦。","大愚說：「你師父這麼疼你、這麼用心，你怎麼還說自己有錯沒錯呢！」","義玄一聽，忽然全懂了，原來師父的『打』，是最深的關心。"],
+   fact:"大人嚴格有時候是因為很在乎你，換個角度想，就懂了背後的好意。他開創了禪宗五大家族裡最大的「臨濟宗」！",
+   quiz:{q:"義玄去問師父問題，連續三次發生了什麼事？",opts:["都被師父打","都得到糖果","師父都睡著了"],ans:0,reward:"答對了！原來嚴格的師父，是用特別的方式在疼他呢。"},
+   src:"某甲三度問佛法的的大意，三度被打。……師於言下大悟。乃曰：「元來黃檗佛法無多子。」"},
+
+  {id:"deshan-xuanjian",name:"德山宣鑒",nick:"被賣餅婆婆問倒的大學者",loc:"湖南·澧陽",era:"782–865（晚唐）",year:840,x:112,y:416,br:"qing",house:"",emoji:"🥟",c1:"#ffe0a8",c2:"#e8a23d",
+   title:"婆子點心",hook:"超會背書的大學者，竟然被一個賣餅的婆婆一句話問到說不出話！",
+   story:["德山是個很厲害的學者，把一本佛經背得滾瓜爛熟，到處跟人講。","有一天他肚子餓，向路邊一個賣餅的婆婆買「點心」吃。","婆婆說：「我問你一題，答得出來，餅免費送你；答不出來，請去別家買。」","婆婆問：「經上說過去的心、現在的心、未來的心都抓不住，那你要『點』哪一個心呢？」","德山想了半天，一句話也答不出來！原來書背得再熟，也不一定真的懂。"],
+   fact:"「點心」這個詞在這裡被婆婆玩了文字遊戲喔。會背書不等於真懂，肯動腦、肯謙虛才會真正學會。他屬於「青原—石頭」這一脈。",
+   quiz:{q:"是誰把超會背書的德山問倒了？",opts:["國王","賣餅的婆婆","他的老師"],ans:1,reward:"答對了！賣餅婆婆一句話就問倒大學者，會背不等於真懂喔！"},
+   src:"婆曰：「金剛經道：過去心不可得，現在心不可得，未來心不可得。未審上座點那個心？」師無語。"},
+
+  {id:"dongshan-liangjie",name:"洞山良价",nick:"看水裡影子開悟的祖師",loc:"江西·洞山",era:"807–869（晚唐）",year:850,x:405,y:478,br:"qing",house:"曹洞宗",emoji:"💧",c1:"#aecbf2",c2:"#5a8fe0",
+   title:"過水睹影",hook:"他低頭過河，看到水裡的影子，突然就什麼都懂了！他看見了什麼？",
+   story:["洞山一直想不通師父留給他的話。","有一天他走路過一條小河。","低頭一看，水面上映出自己的影子。","就在那一瞬間，他突然全懂了！","他說：「影子就是我，可是我不是那個影子。」","後來他成為禪宗『曹洞宗』的開山祖師。"],
+   fact:"水裡的影子很像你，但那只是倒影，真正的你站在岸上，這就是分辨真假的智慧。他開創了五大家族之一「曹洞宗」。",
+   quiz:{q:"洞山是看到什麼之後突然開悟的？",opts:["天上的彩虹","水裡自己的影子","一隻大青蛙"],ans:1,reward:"對！看到水中影子，他一下就懂了，還開創了曹洞宗！"},
+   src:"後因過水睹影，大悟前旨，有偈云……「渠今正是我，我今不是渠。」"},
+
+  {id:"yunmen-wenyan",name:"雲門文偃",nick:"一個字大師",loc:"韶州·雲門山",era:"864–949（晚唐·五代）",year:920,x:250,y:628,br:"qing",house:"雲門宗",emoji:"☀️",c1:"#ffe08a",c2:"#f2a60c",
+   title:"日日是好日",hook:"全寺的人都答不出師父的問題，師父自己說出五個字，成了千年名言！是哪五個字？",
+   story:["雲門師父問大家一個問題，全寺的人都安靜下來，沒人答得出來。","雲門等了又等，最後自己給出了答案。","他說了五個字：「日日是好日。」","意思是——不管天氣好壞、心情好壞，每一天都是值得好好過的好日子。","這句話太有名了，一千多年後我們還常常用它來鼓勵自己。"],
+   fact:"「日日是好日」是雲門宗開創者雲門文偃的名言。它提醒我們：下雨天也好，晴天也好，每一天都有它的美好。",
+   quiz:{q:"雲門師父最有名的五個字是什麼？",opts:["天天有好運","日日是好日","每天要早起"],ans:1,reward:"答對！記住喔——每一天都是好日子。"},
+   src:"「十五日已前不問汝，十五日已後道將一句來。」眾無對。自代曰：「日日是好日。」"},
+
+  {id:"fayan-wenyi",name:"清涼法眼文益",nick:"雪地問路爺爺",loc:"金陵·清涼院",era:"885–958（五代）",year:940,x:788,y:360,br:"qing",house:"法眼宗",emoji:"❄️",c1:"#c4daf2",c2:"#6f9fe0",
+   title:"不知最親切",hook:"學生老實說「我不知道」，師父竟然稱讚：「『不知道』才最棒！」為什麼？",
+   story:["法眼文益年輕時和朋友一起出門遊學，路上遇到大雪，就到一間寺廟躲雪、烤火。","寺裡的桂琛師父問他：「你這趟出門是要去做什麼呀？」","法眼老實回答：「我也不知道耶。」","沒想到師父笑著說：「『不知道』這三個字，才是最真誠、最親切的呀！」","原來敢承認自己「還不懂」，才是最棒的學習開始。","法眼後來就跟著他學，成了法眼宗的開創者。"],
+   fact:"法眼文益是法眼宗的開創者。承認「我不知道」並不丟臉，反而是學習的第一步，因為這樣才會虛心去學新東西。",
+   quiz:{q:"法眼說「我不知道」，桂琛師父怎麼回應？",opts:["罵他笨","稱讚『不知道』最親切","叫他回家"],ans:1,reward:"答對！承認不懂，正是學習的好開始。"},
+   src:"藏曰：「作麼生是行腳事？」師曰：「不知。」藏曰：「不知最親切。」"}
+];
+
+/* ============ 法脈傳承（經原典查核） ============ */
+const LIN={
+  bodhidharma:"西天第28祖・東土禪宗「初祖」",
+  farong:"牛頭宗（四祖道信旁傳弟子）",
+  huineng:"師承：五祖弘忍｜禪宗「六祖」",
+  niaoke:"牛頭宗一脈（四祖道信旁傳）",
+  "nanyang-huizhong":"師父：六祖慧能（門下五大宗匠之一）",
+  "nanyue-huairang":"師父：六祖慧能　徒弟：馬祖道一",
+  "mazu-daoyi":"師父：南嶽懷讓　徒弟：百丈、南泉、石鞏",
+  baizhang:"師父：馬祖道一　徒弟：溈山、黃檗",
+  nanquan:"師父：馬祖道一　徒弟：趙州從諗",
+  "shigong-huizang":"師父：馬祖道一（出家前是獵人）",
+  zhaozhou:"師父：南泉普願　師公：馬祖道一",
+  "guishan-lingyou":"師父：百丈懷海　➜ 開創〔溈仰宗〕",
+  "linji-yixuan":"師父：黃檗希運　➜ 開創〔臨濟宗〕",
+  "deshan-xuanjian":"師父：龍潭崇信（青原一脈）",
+  "dongshan-liangjie":"師父：雲巖曇晟　➜ 開創〔曹洞宗〕",
+  "yunmen-wenyan":"師父：雪峰義存　➜ 開創〔雲門宗〕",
+  "fayan-wenyi":"師父：羅漢桂琛　➜ 開創〔法眼宗〕"
+};
+
+/* ============ 法脈連線（child ← parent） ============ */
+const EDGES=[
+  {f:"bodhidharma",t:"huineng",d:false,br:"liu",l:"達摩傳法，歷二祖慧可→三祖僧璨→四祖道信→五祖弘忍，到六祖惠能"},
+  {f:"bodhidharma",t:"farong",d:true,br:"niu",l:"牛頭宗：四祖道信旁傳法融"},
+  {f:"farong",t:"niaoke",d:true,br:"niu",l:"牛頭宗後裔（經徑山道欽傳鳥窠）"},
+  {f:"huineng",t:"nanyang-huizhong",d:false,br:"liu",l:"六祖法嗣・南陽慧忠國師"},
+  {f:"huineng",t:"nanyue-huairang",d:false,br:"nan",l:"六祖法嗣・南嶽懷讓（南嶽一系之源）"},
+  {f:"nanyue-huairang",t:"mazu-daoyi",d:false,br:"nan",l:"南嶽懷讓傳馬祖道一"},
+  {f:"mazu-daoyi",t:"baizhang",d:false,br:"nan",l:"馬祖傳百丈懷海"},
+  {f:"mazu-daoyi",t:"nanquan",d:false,br:"nan",l:"馬祖傳南泉普願"},
+  {f:"mazu-daoyi",t:"shigong-huizang",d:false,br:"nan",l:"馬祖傳石鞏慧藏"},
+  {f:"baizhang",t:"guishan-lingyou",d:false,br:"nan",l:"百丈傳溈山靈祐 ➜ 開創溈仰宗"},
+  {f:"baizhang",t:"linji-yixuan",d:true,br:"nan",l:"百丈→黃檗希運→臨濟義玄 ➜ 開創臨濟宗"},
+  {f:"nanquan",t:"zhaozhou",d:false,br:"nan",l:"南泉傳趙州從諗"},
+  {f:"huineng",t:"deshan-xuanjian",d:true,br:"qing",l:"青原行思→石頭希遷→天皇道悟→龍潭崇信→德山宣鑒"},
+  {f:"huineng",t:"dongshan-liangjie",d:true,br:"qing",l:"青原→石頭→藥山惟儼→雲巖曇晟→洞山良价 ➜ 開創曹洞宗"},
+  {f:"deshan-xuanjian",t:"yunmen-wenyan",d:true,br:"qing",l:"德山→雪峰義存→雲門文偃 ➜ 開創雲門宗"},
+  {f:"deshan-xuanjian",t:"fayan-wenyi",d:true,br:"qing",l:"德山→雪峰→玄沙師備→羅漢桂琛→法眼文益 ➜ 開創法眼宗"}
+];
+
+const BRC={da:"#8e6fe0",niu:"#39a86b",liu:"#f0a800",nan:"#e8623d",qing:"#4f86e0"};
+const byId={}; DATA.forEach(m=>byId[m.id]=m);
+const KEY="pkjh_map_v1";
+let visited=new Set(JSON.parse(localStorage.getItem(KEY)||"[]"));
+
+/* ---------- 星空 ---------- */
+(function(){const s=document.getElementById('sky');let h='';
+ for(let i=0;i<40;i++){h+=`<div class="spark" style="left:${(i*37+9)%100}%;top:${(i*53+5)%100}%;animation-delay:${(i%10)*0.3}s;transform:scale(${0.5+(i%4)*0.22})"></div>`;}
+ s.innerHTML=h;})();
+
+/* ---------- 畫法脈線 ---------- */
+function edgePath(a,b){
+  const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dx=b.x-a.x,dy=b.y-a.y,off=0.15;
+  return `M ${a.x} ${a.y} Q ${mx-dy*off} ${my+dx*off} ${b.x} ${b.y}`;
+}
+const edgesG=document.getElementById('edges');
+EDGES.forEach(e=>{
+  const a=byId[e.f],b=byId[e.t];
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('class','edge'); p.setAttribute('d',edgePath(a,b));
+  p.setAttribute('stroke',BRC[e.br]);
+  p.setAttribute('stroke-width',e.d?3.5:5.5);
+  p.setAttribute('opacity',e.d?'.55':'.6');
+  if(e.d) p.setAttribute('stroke-dasharray','8 9');
+  p.dataset.year=b.year;
+  const t=document.createElementNS('http://www.w3.org/2000/svg','title'); t.textContent=e.l; p.appendChild(t);
+  edgesG.appendChild(p);
+});
+
+/* ---------- 畫禪師圖釘 ---------- */
+const pinsG=document.getElementById('pins');
+DATA.forEach(m=>{
+  const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('class','pin'+(m.house?' house':'')+(visited.has(m.id)?' visited':''));
+  g.setAttribute('transform',`translate(${m.x},${m.y})`);
+  g.dataset.id=m.id; g.dataset.year=m.year;
+  const crown=m.house?`<text class="crown" y="-32">👑</text>`:'';
+  g.innerHTML=`
+    <circle class="halo" r="30"></circle>
+    <circle class="badge-bg" r="22" stroke="${m.c2}"></circle>
+    <text class="em" y="1">${m.emoji}</text>
+    ${crown}
+    <text class="star" y="-26">⭐</text>
+    <text class="nm" y="40">${m.name}</text>`;
+  const tt=document.createElementNS('http://www.w3.org/2000/svg','title');
+  tt.textContent=`${m.name}（${m.era}）\n${m.loc}`; g.appendChild(tt);
+  g.addEventListener('click',()=>openCard(m.id));
+  pinsG.appendChild(g);
+});
+
+/* ---------- 時間軸 ---------- */
+const slider=document.getElementById('slider');
+const yrTxt=document.getElementById('yrTxt');
+const dynTxt=document.getElementById('dynTxt');
+function dynastyOf(y){
+  if(y<589) return["南北朝","#8e6fe0"];
+  if(y<618) return["隋","#c25fb8"];
+  if(y<756) return["盛唐","#f0a800"];
+  if(y<840) return["中唐","#e8623d"];
+  if(y<907) return["晚唐","#d9534f"];
+  return["五代十國","#4f86e0"];
+}
+let lastShown=new Set();
+function applyYear(y,animate){
+  yrTxt.textContent=y;
+  const[d,c]=dynastyOf(y); dynTxt.textContent=d; dynTxt.style.background=c;
+  const nowShown=new Set();
+  document.querySelectorAll('.pin').forEach(p=>{
+    const show=+p.dataset.year<=y;
+    p.classList.toggle('ghost',!show);
+    if(show){ nowShown.add(p.dataset.id);
+      if(animate && !lastShown.has(p.dataset.id)){ p.classList.add('fresh'); setTimeout(()=>p.classList.remove('fresh'),750);} }
+  });
+  document.querySelectorAll('.edge').forEach(e=>{ e.classList.toggle('hidden',+e.dataset.year>y); });
+  lastShown=nowShown;
+}
+slider.addEventListener('input',()=>applyYear(+slider.value,false));
+
+/* 重播動畫 */
+let raf=null;
+document.getElementById('playBtn').addEventListener('click',()=>{
+  if(raf){cancelAnimationFrame(raf);raf=null;}
+  let y=500; lastShown=new Set(); slider.value=500; applyYear(500,true);
+  const t0=performance.now(), dur=11000;
+  function step(now){
+    const k=Math.min(1,(now-t0)/dur);
+    y=Math.round(500+k*460); slider.value=y; applyYear(y,true);
+    if(k<1) raf=requestAnimationFrame(step); else raf=null;
+  }
+  raf=requestAnimationFrame(step);
+});
+document.getElementById('allBtn').addEventListener('click',()=>{
+  if(raf){cancelAnimationFrame(raf);raf=null;}
+  slider.value=960; applyYear(960,false);
+});
+
+/* ---------- 圖例 ---------- */
+document.getElementById('legend').innerHTML=`
+  <span class="lg"><i style="background:${BRC.da}"></i>達摩源流</span>
+  <span class="lg dash" style="color:${BRC.niu}"><i></i>牛頭旁系</span>
+  <span class="lg"><i style="background:${BRC.liu}"></i>六祖正脈</span>
+  <span class="lg"><i style="background:${BRC.nan}"></i>南嶽—洪州系</span>
+  <span class="lg"><i style="background:${BRC.qing}"></i>青原—石頭系</span>
+  <span class="lg">👑 開宗立派（五家）</span>
+  <span class="lg" style="color:#9a8bc0">虛線＝中間還隔了幾代</span>`;
+
+/* ---------- 進度 ---------- */
+function updateProg(){ document.getElementById('progTxt').textContent=visited.size; }
+updateProg();
+
+/* ---------- 卡片 ---------- */
+const overlay=document.getElementById('overlay');
+const card=document.getElementById('card');
+function openCard(id){
+  const m=byId[id];
+  card.style.setProperty('--c1',m.c1); card.style.setProperty('--c2',m.c2);
+  const houseLine=m.house?`<br>🌸 ${m.house}（禪宗五大家族之一）`:'';
+  card.innerHTML=`
+    <div class="card-top">
+      <button id="closeBtn">✕</button>
+      <div class="cbadge">${m.emoji}</div>
+      <h2>${m.name}</h2>
+      <div class="cnick">${m.nick}</div>
+      <div class="cmeta">📍 ${m.loc}　·　🕰️ ${m.era}${houseLine}</div>
+    </div>
+    <div class="card-body">
+      <div class="qlabel">🤔 公案謎題</div>
+      <p class="question">${m.hook}</p>
+      <p class="ktitle">公案名：《${m.title}》</p>
+      <button class="bigbtn" id="revealBtn">🔍 翻開答案，看看故事</button>
+      <div class="reveal" id="reveal">
+        <div class="story" id="story"></div>
+        <div class="fact">💡 <b>小知識：</b>${m.fact}</div>
+        ${LIN[m.id]?`<div class="lineage">🔗 <b>法脈傳承：</b>${LIN[m.id]}</div>`:''}
+        <details class="src"><summary>📜 原典出處（給大人看）</summary><p>${m.src}</p></details>
+        <button class="bigbtn blue" id="quizBtn" style="margin-top:16px">🎯 挑戰一下，拿星星！</button>
+      </div>
+      <div class="quiz" id="quiz"><h3>${m.quiz.q}</h3><div id="opts"></div><div class="qfeed" id="qfeed"></div></div>
+    </div>`;
+  overlay.classList.add('show');
+  document.getElementById('closeBtn').onclick=closeCard;
+  document.getElementById('revealBtn').onclick=()=>{
+    const rv=document.getElementById('reveal'); rv.classList.add('show');
+    const st=document.getElementById('story');
+    m.story.forEach((line,i)=>{const p=document.createElement('p');p.textContent=line;p.style.animationDelay=(i*0.12)+'s';st.appendChild(p);});
+    document.getElementById('revealBtn').style.display='none';
+    setTimeout(()=>rv.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  };
+  document.getElementById('quizBtn').onclick=()=>{
+    document.getElementById('quiz').classList.add('show');
+    document.getElementById('quizBtn').style.display='none';
+    const ob=document.getElementById('opts');
+    m.quiz.opts.forEach((o,idx)=>{
+      const b=document.createElement('button'); b.className='opt'; b.textContent=String.fromCharCode(65+idx)+'. '+o;
+      b.onclick=()=>answer(m,idx,b); ob.appendChild(b);
+    });
+    setTimeout(()=>document.getElementById('quiz').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  };
+}
+function answer(m,idx,btn){
+  const feed=document.getElementById('qfeed');
+  const allb=[...document.querySelectorAll('.opt')];
+  if(idx===m.quiz.ans){
+    btn.classList.add('correct'); allb.forEach(b=>b.disabled=true);
+    feed.style.color='#2f9c5c'; feed.textContent='🎉 '+m.quiz.reward;
+    if(!visited.has(m.id)){ visited.add(m.id); localStorage.setItem(KEY,JSON.stringify([...visited])); }
+    const pin=document.querySelector(`.pin[data-id="${m.id}"]`); if(pin) pin.classList.add('visited');
+    updateProg(); burst();
+  }else{
+    btn.classList.add('wrong'); feed.style.color='#e25563'; feed.textContent='再想想看～你一定可以的！💪';
+    setTimeout(()=>btn.classList.remove('wrong'),500);
+  }
+}
+function closeCard(){overlay.classList.remove('show');}
+overlay.addEventListener('click',e=>{if(e.target===overlay)closeCard();});
+
+/* ---------- 彩花 ---------- */
+const cvs=document.getElementById('confetti'),ctx=cvs.getContext('2d');
+function fit(){cvs.width=innerWidth;cvs.height=innerHeight;} fit(); addEventListener('resize',fit);
+let parts=[],rafC=null;
+function burst(){
+  const cols=['#ffd86b','#ff9ec4','#9be8ff','#b48cff','#9be8c9','#ffb24d'];
+  for(let i=0;i<70;i++){parts.push({x:innerWidth/2,y:innerHeight*0.4,vx:(Math.random()-.5)*14,vy:Math.random()*-12-4,
+    g:0.4+Math.random()*0.2,s:6+Math.random()*7,c:cols[i%cols.length],r:Math.random()*6,vr:(Math.random()-.5)*0.4,life:90});}
+  if(!rafC) loopC();
+}
+function loopC(){
+  ctx.clearRect(0,0,cvs.width,cvs.height);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.r+=p.vr;p.life--;
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.c;ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.6);ctx.restore();});
+  parts=parts.filter(p=>p.life>0&&p.y<cvs.height+40);
+  if(parts.length) rafC=requestAnimationFrame(loopC); else{rafC=null;ctx.clearRect(0,0,cvs.width,cvs.height);}
+}
+
+/* ---------- 初始：顯示全部 ---------- */
+applyYear(960,false);
+</script>
+</body>
+</html>
