@@ -205,6 +205,18 @@
   @keyframes shine{0%{background-position:0% 50%;}100%{background-position:200% 50%;}}
   .footlink{display:inline-block; margin:8px 6px 0; color:#b06fae; font-weight:800; text-decoration:none; font-size:.84rem;}
   .footlink:hover{text-decoration:underline;}
+
+  /* 本站資訊（寶嚴禪寺所有開發一律附） */
+  .siteinfo{position:relative; z-index:1; margin:30px 16px 40px; text-align:left; font-size:16px; line-height:1.85;
+    color:var(--ink); background:var(--paper); border:1px solid rgba(120,90,170,.35); border-radius:12px; padding:16px 20px;}
+  .siteinfo .si-h{color:var(--ink); font-weight:700; letter-spacing:.12em; margin-bottom:6px;}
+  .siteinfo dl{display:grid; grid-template-columns:max-content 1fr; gap:4px 12px; margin:0;}
+  .siteinfo dt{color:var(--ink2); white-space:nowrap;}
+  .siteinfo dd{margin:0; word-break:break-word;}
+  .siteinfo a{color:#8a3f88; text-decoration:underline; text-underline-offset:3px; display:inline-block; padding:6px 0; margin:-6px 0;}
+  @media(max-width:420px){ .siteinfo dl{grid-template-columns:1fr; gap:0;} .siteinfo dd{margin-bottom:6px;} }
+  @media(min-width:760px){ .siteinfo{max-width:720px; margin-left:auto; margin-right:auto;} }
+
 </style>
 </head>
 <body>
@@ -236,6 +248,16 @@
   <a href="時空地圖.html" class="footlink">🗺️ 禪宗時空大地圖</a><br>
   <button class="reset" id="resetBtn">🔄 重新開始冒險</button>
 </footer>
+
+<section class="siteinfo" aria-label="本站資訊">
+  <div class="si-h">本站資訊</div>
+  <dl>
+    <dt>名稱：</dt><dd>跑江湖・禪師星球大冒險</dd>
+    <dt>網址：</dt><dd><a href="https://twnyda07.github.io/paojianghu/">twnyda07.github.io/paojianghu</a></dd>
+    <dt>特別功能：</dt><dd>跟著光之路拜訪 17 位禪師，每站先看題目、點一下才翻開故事與答案；挑戰一題就能收一顆星星，進度會記在這台裝置上；可看故事的古文出處，也能打開禪宗時空大地圖。</dd>
+    <dt>創作者／版權所有：</dt><dd>© 2026 寶嚴山寶嚴禪寺　保留一切權利</dd>
+  </dl>
+</section>
 
 <div id="overlay"><div id="card"></div></div>
 <div id="celebrate"></div>
