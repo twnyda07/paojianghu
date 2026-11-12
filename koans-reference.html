@@ -217,6 +217,17 @@
   @media (max-width: 500px) {
     .locations-grid { grid-template-columns: 1fr; }
   }
+
+  /* 本站資訊（寶嚴禪寺所有開發一律附） */
+  .siteinfo{margin:30px auto 40px; width:calc(100% - 32px); max-width:720px; text-align:left; font-size:16px; line-height:1.85;
+    color:#e8dcc8; background:#241b13; border:1px solid #4a3520; border-radius:6px; padding:16px 20px; font-family:inherit;}
+  .siteinfo .si-h{color:#c8a84b; font-weight:700; letter-spacing:.12em; margin-bottom:6px;}
+  .siteinfo dl{display:grid; grid-template-columns:max-content 1fr; gap:4px 12px; margin:0;}
+  .siteinfo dt{color:#b9a98a; white-space:nowrap;}
+  .siteinfo dd{margin:0; word-break:break-word;}
+  .siteinfo a{color:#c8a84b; text-decoration:underline; text-underline-offset:3px; display:inline-block; padding:6px 0; margin:-6px 0;}
+  @media(max-width:420px){ .siteinfo dl{grid-template-columns:1fr; gap:0;} .siteinfo dd{margin-bottom:6px;} }
+
 </style>
 </head>
 <body>
@@ -239,6 +250,16 @@
 <main id="main"></main>
 
 <footer>跑江湖 · 禪不在言語，在指月之間</footer>
+
+<section class="siteinfo" aria-label="本站資訊">
+  <div class="si-h">本站資訊</div>
+  <dl>
+    <dt>名稱：</dt><dd>跑江湖・禪宗公案地圖</dd>
+    <dt>網址：</dt><dd><a href="https://twnyda07.github.io/paojianghu/koans-reference.html">twnyda07.github.io/paojianghu/koans-reference.html</a></dd>
+    <dt>特別功能：</dt><dd>依祖師與發生地點整理禪宗公案，可用上方按鈕依地區篩選（北方、南方、江西、湖南湖北、浙江、海外）。</dd>
+    <dt>創作者／版權所有：</dt><dd>© 2026 寶嚴山寶嚴禪寺　保留一切權利</dd>
+  </dl>
+</section>
 
 <script>
 const data = [

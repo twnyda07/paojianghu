@@ -165,6 +165,18 @@
   footer{position:relative; z-index:10; text-align:center; padding:6px 16px 30px; color:#9a8bc0; font-size:.78rem; line-height:1.7;}
   footer a{color:#b06fae; font-weight:800; text-decoration:none;}
   #confetti{position:fixed; inset:0; z-index:200; pointer-events:none;}
+
+  /* 本站資訊（寶嚴禪寺所有開發一律附） */
+  .siteinfo{position:relative; z-index:10; margin:30px 16px 40px; text-align:left; font-size:16px; line-height:1.85;
+    color:var(--ink); background:var(--paper); border:1px solid rgba(120,90,170,.35); border-radius:12px; padding:16px 20px;}
+  .siteinfo .si-h{color:var(--ink); font-weight:700; letter-spacing:.12em; margin-bottom:6px;}
+  .siteinfo dl{display:grid; grid-template-columns:max-content 1fr; gap:4px 12px; margin:0;}
+  .siteinfo dt{color:var(--ink2); white-space:nowrap;}
+  .siteinfo dd{margin:0; word-break:break-word;}
+  .siteinfo a{color:#8a3f88; text-decoration:underline; text-underline-offset:3px; display:inline-block; padding:6px 0; margin:-6px 0;}
+  @media(max-width:420px){ .siteinfo dl{grid-template-columns:1fr; gap:0;} .siteinfo dd{margin-bottom:6px;} }
+  @media(min-width:760px){ .siteinfo{max-width:720px; margin-left:auto; margin-right:auto;} }
+
 </style>
 </head>
 <body>
@@ -251,6 +263,16 @@
   <span style="font-size:.72rem">地圖位置與年代為示意；故事改編自《禪宗法脈》原典，點選禪師可看古文出處</span><br>
   <a href="index.html">← 回到「跑江湖」光之路</a>
 </footer>
+
+<section class="siteinfo" aria-label="本站資訊">
+  <div class="si-h">本站資訊</div>
+  <dl>
+    <dt>名稱：</dt><dd>禪宗公案時空地圖・跑江湖</dd>
+    <dt>網址：</dt><dd><a href="https://twnyda07.github.io/paojianghu/%E6%99%82%E7%A9%BA%E5%9C%B0%E5%9C%96.html">twnyda07.github.io/paojianghu/時空地圖.html</a></dd>
+    <dt>特別功能：</dt><dd>拖動時間軸，看禪法從南北朝到五代一路傳開，可重播時空之旅或一次顯示全部；點禪師可看故事與古文出處，探索進度即時顯示。</dd>
+    <dt>創作者／版權所有：</dt><dd>© 2026 寶嚴山寶嚴禪寺　保留一切權利</dd>
+  </dl>
+</section>
 
 <div id="overlay"><div id="card"></div></div>
 <canvas id="confetti"></canvas>
